@@ -6,7 +6,6 @@ categories: Others
 ---
 
 本文介绍如何利用StrongSwan一步步在CentOS服务器（或者VPS主机）上搭建自己的VPN服务器，支持IPSec协议和最新的IKEv2协议，支持iOS、OS X、Windows7、Android、Linux等，iOS9、OS X10.10以上版本已支持IKEv2协议。
-![](http://pic2.ooopic.com/01/03/51/25b1OOOPIC19.jpg)
 <!-- more -->
 
 VPN （Virtual Private Network），是一种常用于连接中、大型企业或团体与团体间的私人网络的通讯方法。可在不安全的网络中传送可靠、安全的信息，或者透过服务器读取被限制的外界资源，俗称“翻墙”。搭建VPN的服务器配置要求不高，一般的VPS主机即可满足，国外有不少物美价廉的主机可供选择，比如Bandwagon、Host US等。本文以搭载了CentOS6.x的VPS主机为例，其他系统可自行修改相应的命令。
@@ -26,7 +25,7 @@ cd strongswan-*
 make && make install
 ```
 
->Tips: 要编译StrongSwan需要gcc等工具，这里默认系统已经安装，如果没有可使用下述命令一次安装所有依赖：
+>Tips：要编译StrongSwan需要gcc等工具，这里默认系统已经安装，如果没有可使用下述命令一次安装所有依赖：
 >*yum -y install pam-devel openssl-devel make gcc*
 
 ### 证书配置
@@ -38,7 +37,7 @@ ipsec pki --gen --outform pem > ca.pem
 ipsec pki --self --in ca.pem --dn "C=com, O=vpn, CN=VPN CA" --ca --outform pem > ca.cert.pem
     ```
 
-	>Tips: C 表示国家名，O 表示组织名，CN 表示通用名
+	>Tips：C 表示国家名，O 表示组织名，CN 表示通用名
 
 2. 生成服务器证书的私钥，并用CA证书签发服务器证书
 
@@ -51,7 +50,7 @@ ipsec pki --pub --in server.pem | ipsec pki --issue --cacert ca.cert.pem \
     --outform pem > server.cert.pem
     ```
 
-	>Tips: 	
+	>Tips：
 	>
 	>1. C和O的值必须与CA证书的一致。CN和san建议使用服务器的 IP 地址或 URL，san可设置多个。
 	>
@@ -92,7 +91,7 @@ cp -r client.pem  /usr/local/etc/ipsec.d/private/
 
 ### StrongSwan配置
 
-##### **ipsec配置文件**
+#### ipsec配置文件
 
 `/usr/local/etc/ipsec.conf`
 
@@ -153,7 +152,7 @@ conn IKEv2-EAP
     auto=add
 ```
 
-##### **strongswan配置文件**
+#### strongswan配置文件
 
 `/usr/local/etc/strongswan.conf`
 
@@ -174,7 +173,7 @@ charon {
 include strongswan.d/*.conf
 ```
 
-##### **密码认证文件**
+#### 密码认证文件
 
 `vi /usr/local/etc/ipsec.secrets`
 
@@ -189,7 +188,7 @@ myUserName %any : EAP "myUserPassWord"
 >`设备名称\用户名 : EAP "密码"`
 >其中，设备名称可在“设置-关于-手机信息”中查看。
 
-##### **启动StrongSwan**
+#### 启动StrongSwan
 
 `ipsec start`
 
@@ -227,11 +226,11 @@ iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o eth0 -j MASQUERADE
 
 `service iptables restart`
 
->Tips: CentOS 7.x 使用 firewallD 代替 iptables 作为默认防火墙，可自行禁用并安装 iptables。
+>Tips：CentOS 7.x 使用 firewallD 代替 iptables 作为默认防火墙，可自行禁用并安装 iptables。
 
 ### 客户端使用
 
-##### Mac OS X／iOS
+#### Mac OS X／iOS
 
 新建VPN：
 
@@ -253,7 +252,7 @@ iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o eth0 -j MASQUERADE
 	- 远程ID：服务器IP或者URL
 	- 用户名密码：ipsec.secrets文件中EAP前后的那两个
 
-##### Windows 7及更高版本
+#### Windows 7及更高版本
 
 导入证书：
 
@@ -268,7 +267,7 @@ iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o eth0 -j MASQUERADE
 
 创建VPN即可。
 
-##### Android
+#### Android
 
 IPSec XAUTH PSK
 
