@@ -36,8 +36,7 @@ make && make install
 ipsec pki --gen --outform pem > ca.pem
 ipsec pki --self --in ca.pem --dn "C=com, O=vpn, CN=VPN CA" --ca --outform pem > ca.cert.pem
     ```
-
-	>Tips：C 表示国家名，O 表示组织名，CN 表示通用名
+    >Tips：C 表示国家名，O 表示组织名，CN 表示通用名
 
 2. 生成服务器证书的私钥，并用CA证书签发服务器证书
 
