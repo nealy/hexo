@@ -1,16 +1,18 @@
 title: 在CentOS/Ubuntu下搭建 IPSec/IKEv2 VPN
 date: 2016-01-20 15:47:12
 updated: 2016-01-20 15:47:12
-tags: linux strongswan vpn
+tags: [linux, strongswan, vpn]
 categories: Others
 ---
 
 本文介绍如何利用StrongSwan一步步在CentOS服务器（或者VPS主机）上搭建自己的VPN服务器，支持IPSec协议和最新的IKEv2协议，支持iOS、OS X、Windows7、Android、Linux等，iOS9、OS X10.10以上版本已支持IKEv2协议。
+![](http://pic2.ooopic.com/01/03/51/25b1OOOPIC19.jpg)
 <!-- more -->
 
 VPN （Virtual Private Network），是一种常用于连接中、大型企业或团体与团体间的私人网络的通讯方法。可在不安全的网络中传送可靠、安全的信息，或者透过服务器读取被限制的外界资源，俗称“翻墙”。搭建VPN的服务器配置要求不高，一般的VPS主机即可满足，国外有不少物美价廉的主机可供选择，比如Bandwagon、Host US等。本文以搭载了CentOS6.x的VPS主机为例，其他系统可自行修改相应的命令。
 
-###安装StrongSwan
+### 安装StrongSwan
+
 StrongSwan是一个完整的2.4和2.6的Linux内核下的IPsec和IKEv1 的实现，当然也完全支持新的IKEv2协议的Linux 2.6内核。可以手动到[官网strongswan.org](https://www.strongswan.org)下载发行包，也可以直接编译源码安装，编译源码的好处是可以指定不同的配置来满足我们的需求。
 
 编译并安装：
@@ -25,12 +27,9 @@ make && make install
 ```
 
 >Tips: 要编译StrongSwan需要gcc等工具，这里默认系统已经安装，如果没有可使用下述命令一次安装所有依赖：
->
->```
->yum -y install pam-devel openssl-devel make gcc
->```
+>*yum -y install pam-devel openssl-devel make gcc*
 
-###证书配置
+### 证书配置
 
 1. 生成CA证书的私钥，并使用私钥签名CA证书
 
@@ -46,10 +45,10 @@ ipsec pki --self --in ca.pem --dn "C=com, O=vpn, CN=VPN CA" --ca --outform pem >
     ```
 ipsec pki --gen --outform pem > server.pem
 ipsec pki --pub --in server.pem | ipsec pki --issue --cacert ca.cert.pem \
-		--cakey ca.pem --dn "C=com, O=vpn, CN=${server_name}" \
-        --san="${server_name}" \
-        --flag serverAuth --flag ikeIntermediate \
-        --outform pem > server.cert.pem
+    --cakey ca.pem --dn "C=com, O=vpn, CN=${server_name}" \
+    --san="${server_name}" \
+    --flag serverAuth --flag ikeIntermediate \
+    --outform pem > server.cert.pem
     ```
 
 	>Tips: 	
@@ -69,8 +68,8 @@ ipsec pki --pub --in server.pem | ipsec pki --issue --cacert ca.cert.pem \
     ```
 ipsec pki --gen --outform pem > client.pem
 ipsec pki --pub --in client.pem | ipsec pki --issue --cacert ca.cert.pem \
-        --cakey ca.pem --dn "C=com, O=vpn, CN=VPN Client" \
-        --outform pem > client.cert.pem
+    --cakey ca.pem --dn "C=com, O=vpn, CN=VPN Client" \
+    --outform pem > client.cert.pem
     ```
 
 4. 生成 pkcs12 证书，此处会提示输入两次密码，用于导入证书到其他系统时验证。没有这个密码别人即使拿到了证书也无法使用，可为空
@@ -91,11 +90,11 @@ cp -r client.pem  /usr/local/etc/ipsec.d/private/
 
 6. 将上述生成的CA证书（ca.cert.pem）、客户端证书（client.cert.pem）、pkcs12证书（client.cert.p12）使用FTP或者scp拷贝出来，以备供客户端使用
 
-###StrongSwan配置
+### StrongSwan配置
 
-#####**ipsec配置文件**
+##### **ipsec配置文件**
 
-```/usr/local/etc/ipsec.conf```
+`/usr/local/etc/ipsec.conf`
 
 ```
 config setup
@@ -154,9 +153,9 @@ conn IKEv2-EAP
     auto=add
 ```
 
-#####**strongswan配置文件**
+##### **strongswan配置文件**
 
-```/usr/local/etc/strongswan.conf```
+`/usr/local/etc/strongswan.conf`
 
 ```
 charon {
@@ -175,9 +174,9 @@ charon {
 include strongswan.d/*.conf
 ```
 
-#####**密码认证文件**
+##### **密码认证文件**
 
-```vi /usr/local/etc/ipsec.secrets```
+`vi /usr/local/etc/ipsec.secrets`
 
 ```
 : RSA server.pem
@@ -187,27 +186,25 @@ myUserName %any : EAP "myUserPassWord"
 ```
 
 >Windows Phone 8.1 设备因其使用EAP连接时会自动在用户名之前加上设备名称，因此若要用于WP8.1设备应追加一条EAP配置：
-
->```设备名称\用户名 : EAP "密码"```
-
+>`设备名称\用户名 : EAP "密码"`
 >其中，设备名称可在“设置-关于-手机信息”中查看。
 
-#####**启动StrongSwan**
+##### **启动StrongSwan**
 
-```ipsec start```
+`ipsec start`
 
-####iptables配置
+### iptables配置
 
 要通过VPN访问外网需要开启Linux内核的IP转发功能，编辑
 
-```/etc/sysctl.conf```
+`/etc/sysctl.conf`
 
 ```
 net.ipv4.ip_forward=1
 net.ipv6.conf.all.forwarding=1
 ```
 
-运行```sysctl -p```使之生效。
+运行`sysctl -p`使之生效。
 
 同时应该设置iptables开启需要开放的端口和nat转发，这里配置几个各个操作系统常用的VPN默认端口：
 
@@ -228,13 +225,13 @@ iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o eth0 -j MASQUERADE
 
 保存并退出，重启iptables使之生效：
 
-```service iptables restart```
+`service iptables restart`
 
 >Tips: CentOS 7.x 使用 firewallD 代替 iptables 作为默认防火墙，可自行禁用并安装 iptables。
 
-###客户端使用
+### 客户端使用
 
-#####Mac OS X／iOS
+##### Mac OS X／iOS
 
 新建VPN：
 
@@ -256,7 +253,7 @@ iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o eth0 -j MASQUERADE
 	- 远程ID：服务器IP或者URL
 	- 用户名密码：ipsec.secrets文件中EAP前后的那两个
 
-#####Windows 7及更高版本
+##### Windows 7及更高版本
 
 导入证书：
 
@@ -271,7 +268,7 @@ iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o eth0 -j MASQUERADE
 
 创建VPN即可。
 
-#####Android
+##### Android
 
 IPSec XAUTH PSK
 
