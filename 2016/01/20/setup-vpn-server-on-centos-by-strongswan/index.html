@@ -1,0 +1,740 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  <link href="//fonts.googleapis.com/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="linux strongswan vpn," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="本文介绍如何利用StrongSwan一步步在CentOS服务器（或者VPS主机）上搭建自己的VPN服务器，支持IPSec协议和最新的IKEv2协议，支持iOS、OS X、Windows7、Android、Linux等，iOS9、OS X10.10以上版本已支持IKEv2协议。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在CentOS/Ubuntu下搭建 IPSec/IKEv2 VPN">
+<meta property="og:url" content="http://nealyg.github.io/hexo/2016/01/20/setup-vpn-server-on-centos-by-strongswan/index.html">
+<meta property="og:site_name" content="一隅之足">
+<meta property="og:description" content="本文介绍如何利用StrongSwan一步步在CentOS服务器（或者VPS主机）上搭建自己的VPN服务器，支持IPSec协议和最新的IKEv2协议，支持iOS、OS X、Windows7、Android、Linux等，iOS9、OS X10.10以上版本已支持IKEv2协议。">
+<meta property="og:updated_time" content="2016-01-20T07:47:12.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="在CentOS/Ubuntu下搭建 IPSec/IKEv2 VPN">
+<meta name="twitter:description" content="本文介绍如何利用StrongSwan一步步在CentOS服务器（或者VPS主机）上搭建自己的VPN服务器，支持IPSec协议和最新的IKEv2协议，支持iOS、OS X、Windows7、Android、Linux等，iOS9、OS X10.10以上版本已支持IKEv2协议。">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'hide',
+    motion: true
+  };
+</script>
+
+  <title> 在CentOS/Ubuntu下搭建 IPSec/IKEv2 VPN | 一隅之足 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">一隅之足</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                在CentOS/Ubuntu下搭建 IPSec/IKEv2 VPN
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2016-01-20T15:47:12+08:00" content="2016-01-20">
+              2016-01-20
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Others/" itemprop="url" rel="index">
+                    <span itemprop="name">Others</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><p>本文介绍如何利用StrongSwan一步步在CentOS服务器（或者VPS主机）上搭建自己的VPN服务器，支持IPSec协议和最新的IKEv2协议，支持iOS、OS X、Windows7、Android、Linux等，iOS9、OS X10.10以上版本已支持IKEv2协议。<br><a id="more"></a></p>
+<p>VPN （Virtual Private Network），是一种常用于连接中、大型企业或团体与团体间的私人网络的通讯方法。可在不安全的网络中传送可靠、安全的信息，或者透过服务器读取被限制的外界资源，俗称“翻墙”。搭建VPN的服务器配置要求不高，一般的VPS主机即可满足，国外有不少物美价廉的主机可供选择，比如Bandwagon、Host US等。本文以搭载了CentOS6.x的VPS主机为例，其他系统可自行修改相应的命令。</p>
+<p>###安装StrongSwan<br>StrongSwan是一个完整的2.4和2.6的Linux内核下的IPsec和IKEv1 的实现，当然也完全支持新的IKEv2协议的Linux 2.6内核。可以手动到<a href="https://www.strongswan.org" target="_blank" rel="external">官网strongswan.org</a>下载发行包，也可以直接编译源码安装，编译源码的好处是可以指定不同的配置来满足我们的需求。</p>
+<p>编译并安装：</p>
+<figure class="highlight brainfuck"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#</span> <span class="comment">若不指定版本号(strongswan</span><span class="string">.</span><span class="comment">tar</span><span class="string">.</span><span class="comment">gz)将始终下载最新版本</span></span><br><span class="line"><span class="comment">wget</span> <span class="comment">https://download</span><span class="string">.</span><span class="comment">strongswan</span><span class="string">.</span><span class="comment">org/strongswan</span><span class="literal">-</span><span class="comment">5</span><span class="string">.</span><span class="comment">3</span><span class="string">.</span><span class="comment">5</span><span class="string">.</span><span class="comment">tar</span><span class="string">.</span><span class="comment">gz</span></span><br><span class="line"><span class="comment">tar</span> <span class="comment">xzf</span> <span class="comment">strongswan</span><span class="string">.</span><span class="comment">tar</span><span class="string">.</span><span class="comment">gz</span></span><br><span class="line"><span class="comment">cd</span> <span class="comment">strongswan</span><span class="literal">-</span><span class="comment">*</span></span><br><span class="line"><span class="string">.</span><span class="comment">/configure</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">openssl</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">nat</span><span class="literal">-</span><span class="comment">transport</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">disable</span><span class="literal">-</span><span class="comment">mysql</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">disable</span><span class="literal">-</span><span class="comment">ldap</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">disable</span><span class="literal">-</span><span class="comment">static</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">shared</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">md4</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">mschapv2</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">aka</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">aka</span><span class="literal">-</span><span class="comment">3gpp2</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">gtc</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">identity</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">md5</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">peap</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">radius</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">sim</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">sim</span><span class="literal">-</span><span class="comment">file</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">simaka</span><span class="literal">-</span><span class="comment">pseudonym</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">simaka</span><span class="literal">-</span><span class="comment">reauth</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">simaka</span><span class="literal">-</span><span class="comment">sql</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">tls</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">tnc</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">enable</span><span class="literal">-</span><span class="comment">eap</span><span class="literal">-</span><span class="comment">ttls</span></span><br><span class="line"><span class="comment">make</span> <span class="comment">&amp;&amp;</span> <span class="comment">make</span> <span class="comment">install</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Tips: 要编译StrongSwan需要gcc等工具，这里默认系统已经安装，如果没有可使用下述命令一次安装所有依赖：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;yum -y <span class="keyword">install</span> pam-devel openssl-devel make gcc</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>###证书配置</p>
+<ol>
+<li><p>生成CA证书的私钥，并使用私钥签名CA证书</p>
+ <figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ipsec pki --gen --outform pem &gt; ca<span class="class">.pem</span></span><br><span class="line">ipsec pki --self --<span class="keyword">in</span> ca<span class="class">.pem</span> --dn <span class="string">"C=com, O=vpn, CN=VPN CA"</span> --ca --outform pem &gt; ca<span class="class">.cert</span><span class="class">.pem</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Tips: C 表示国家名，O 表示组织名，CN 表示通用名</p>
+</blockquote>
+</li>
+<li><p>生成服务器证书的私钥，并用CA证书签发服务器证书</p>
+ <figure class="highlight brainfuck"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">ipsec</span> <span class="comment">pki</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">gen</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">outform</span> <span class="comment">pem</span> &gt; <span class="comment">server</span><span class="string">.</span><span class="comment">pem</span></span><br><span class="line"><span class="comment">ipsec</span> <span class="comment">pki</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">pub</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">in</span> <span class="comment">server</span><span class="string">.</span><span class="comment">pem</span> <span class="comment">|</span> <span class="comment">ipsec</span> <span class="comment">pki</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">issue</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">cacert</span> <span class="comment">ca</span><span class="string">.</span><span class="comment">cert</span><span class="string">.</span><span class="comment">pem</span> <span class="comment">\</span></span><br><span class="line"><span class="comment">		</span><span class="literal">-</span><span class="literal">-</span><span class="comment">cakey</span> <span class="comment">ca</span><span class="string">.</span><span class="comment">pem</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">dn</span> <span class="comment">"C=com</span><span class="string">,</span> <span class="comment">O=vpn</span><span class="string">,</span> <span class="comment">CN=$&#123;server_name&#125;"</span> <span class="comment">\</span></span><br><span class="line">        <span class="literal">-</span><span class="literal">-</span><span class="comment">san="$&#123;server_name&#125;"</span> <span class="comment">\</span></span><br><span class="line">        <span class="literal">-</span><span class="literal">-</span><span class="comment">flag</span> <span class="comment">serverAuth</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">flag</span> <span class="comment">ikeIntermediate</span> <span class="comment">\</span></span><br><span class="line">        <span class="literal">-</span><span class="literal">-</span><span class="comment">outform</span> <span class="comment">pem</span> &gt; <span class="comment">server</span><span class="string">.</span><span class="comment">cert</span><span class="string">.</span><span class="comment">pem</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Tips:     </p>
+<ol>
+<li><p>C和O的值必须与CA证书的一致。CN和san建议使用服务器的 IP 地址或 URL，san可设置多个。</p>
+</li>
+<li><p>iOS 客户端要求 CN 必须是你的服务器的 IP 地址或 URL。</p>
+</li>
+<li><p>Windows 7 除了对CN的要求之外，还要求必须显式说明这个服务器证书的用途（如用于与服务器进行认证），–flag serverAuth。</p>
+</li>
+<li><p>非 iOS 的 Mac OS X 要求了”IP 安全网络密钥互换居间（IP Security IKE Intermediate）“这种增强型密钥用法（EKU），–flag ikdeIntermediate。</p>
+</li>
+<li><p>Android 和 iOS 都要求服务器别名（serverAltName）为服务器的 URL 或 IP 地址，–san。</p>
+</li>
+</ol>
+</blockquote>
+</li>
+<li><p>生成客户端证书</p>
+ <figure class="highlight brainfuck"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">ipsec</span> <span class="comment">pki</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">gen</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">outform</span> <span class="comment">pem</span> &gt; <span class="comment">client</span><span class="string">.</span><span class="comment">pem</span></span><br><span class="line"><span class="comment">ipsec</span> <span class="comment">pki</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">pub</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">in</span> <span class="comment">client</span><span class="string">.</span><span class="comment">pem</span> <span class="comment">|</span> <span class="comment">ipsec</span> <span class="comment">pki</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">issue</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">cacert</span> <span class="comment">ca</span><span class="string">.</span><span class="comment">cert</span><span class="string">.</span><span class="comment">pem</span> <span class="comment">\</span></span><br><span class="line">        <span class="literal">-</span><span class="literal">-</span><span class="comment">cakey</span> <span class="comment">ca</span><span class="string">.</span><span class="comment">pem</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">dn</span> <span class="comment">"C=com</span><span class="string">,</span> <span class="comment">O=vpn</span><span class="string">,</span> <span class="comment">CN=VPN</span> <span class="comment">Client"</span> <span class="comment">\</span></span><br><span class="line">        <span class="literal">-</span><span class="literal">-</span><span class="comment">outform</span> <span class="comment">pem</span> &gt; <span class="comment">client</span><span class="string">.</span><span class="comment">cert</span><span class="string">.</span><span class="comment">pem</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>生成 pkcs12 证书，此处会提示输入两次密码，用于导入证书到其他系统时验证。没有这个密码别人即使拿到了证书也无法使用，可为空</p>
+ <figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl pkcs12 -export -inkey client<span class="class">.pem</span> -<span class="keyword">in</span> client<span class="class">.cert</span><span class="class">.pem</span> -name <span class="string">"client"</span> -certfile ca<span class="class">.cert</span><span class="class">.pem</span> -caname <span class="string">"VPN Client"</span>  -out client<span class="class">.cert</span><span class="class">.p12</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>安装证书</p>
+ <figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">cp -r ca.cert.pem <span class="regexp">/usr/</span>local<span class="regexp">/etc/i</span>psec.d<span class="regexp">/cacerts/</span></span><br><span class="line">cp -r server.cert.pem <span class="regexp">/usr/</span>local<span class="regexp">/etc/i</span>psec.d<span class="regexp">/certs/</span></span><br><span class="line">cp -r server.pem <span class="regexp">/usr/</span>local<span class="regexp">/etc/i</span>psec.d<span class="regexp">/private/</span></span><br><span class="line">cp -r client.cert.pem <span class="regexp">/usr/</span>local<span class="regexp">/etc/i</span>psec.d<span class="regexp">/certs/</span></span><br><span class="line">cp -r client.pem  <span class="regexp">/usr/</span>local<span class="regexp">/etc/i</span>psec.d<span class="regexp">/private/</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将上述生成的CA证书（ca.cert.pem）、客户端证书（client.cert.pem）、pkcs12证书（client.cert.p12）使用FTP或者scp拷贝出来，以备供客户端使用</p>
+</li>
+</ol>
+<p>###StrongSwan配置</p>
+<p>#####<strong>ipsec配置文件</strong></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#10;</span><br></pre></td></tr></table></figure>
+<p>config setup<br>    uniqueids=never<br>conn %default<br>    keyexchange=ike<br>    left=%any<br>    leftsubnet=0.0.0.0/0<br>    right=%any<br>conn IKE-BASE<br>    leftcert=server.cert.pem<br>    rightsourceip=10.0.0.0/24</p>
+<h1 id="ios_etc"><a href="#ios_etc" class="headerlink" title="ios etc."></a>ios etc.</h1><p>conn by_cert<br>    also=IKE-BASE<br>    keyexchange=ikev1<br>    fragmentation=yes<br>    leftauth=pubkey<br>    leftsubnet=0.0.0.0/0<br>    rightauth=pubkey<br>    rightauth2=xauth<br>    rightcert=client.cert.pem<br>    auto=add</p>
+<h1 id="ios_etc-1"><a href="#ios_etc-1" class="headerlink" title="ios etc."></a>ios etc.</h1><p>conn by_psk<br>    also=IKE-BASE<br>    keyexchange=ikev1<br>    leftauth=psk<br>    rightauth=psk<br>    rightauth2=xauth<br>    auto=add</p>
+<h1 id="osx_linux_android_etc"><a href="#osx_linux_android_etc" class="headerlink" title="osx linux android etc."></a>osx linux android etc.</h1><p>conn by_key<br>    also=IKE-BASE<br>    keyexchange=ikev2<br>    leftauth=pubkey<br>    rightauth=pubkey<br>    rightcert=client.cert.pem<br>    auto=add</p>
+<h1 id="ikev2__28ios_osx_win7_etc-_29"><a href="#ikev2__28ios_osx_win7_etc-_29" class="headerlink" title="ikev2 (ios osx win7 etc.)"></a>ikev2 (ios osx win7 etc.)</h1><p>conn IKEv2-EAP<br>    also=IKE-BASE<br>    keyexchange=ikev2<br>    ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!<br>    esp=aes256-sha256,3des-sha1,aes256-sha1!<br>    rekey=no<br>    leftid=${my_cert_cn}<br>    leftauth=pubkey<br>    leftsendcert=always<br>    rightfirewall=yes<br>    rightsendcert=never<br>    rightauth=eap-mschapv2<br>    eap_identity=%any<br>    dpdaction=clear<br>    fragmentation=yes<br>    auto=add<br><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">#####**strongswan配置文件**</span></span><br><span class="line"></span><br><span class="line">```/usr/<span class="keyword">local</span>/etc/strongswan.conf</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">charon</span> &#123;</span><br><span class="line">    <span class="title">load_modular</span> = <span class="built_in">yes</span></span><br><span class="line">    duplicheck.enable = <span class="built_in">no</span> <span class="comment">#闭冗余检查以同时连接多个设备</span></span><br><span class="line">    compress = <span class="built_in">yes</span></span><br><span class="line">    plugins &#123;</span><br><span class="line">        <span class="title">include</span> strongswan.d/charon/<span class="regexp">*.conf</span></span><br><span class="line">    &#125;</span><br><span class="line">    dns1 = <span class="number">8.8.8.8</span></span><br><span class="line">    dns2 = <span class="number">8.8.4.4</span></span><br><span class="line">    <span class="comment"># for windows</span></span><br><span class="line">    nbns1 = <span class="number">8.8.8.8</span></span><br><span class="line">    nbns2 = <span class="number">8.8.4.4</span></span><br><span class="line">&#125;</span><br><span class="line">include strongswan.d/<span class="regexp">*.conf</span></span><br></pre></td></tr></table></figure>
+<p>#####<strong>密码认证文件</strong></p>
+<figure class="highlight"><figcaption><span>/usr/local/etc/ipsec.secrets```</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#10;</span><br></pre></td></tr></table></figure>
+<p>: RSA server.pem<br>: PSK “myPSKpw”<br>: XAUTH “myXAUTHpw”<br>myUserName %any : EAP “myUserPassWord”<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">&gt;Windows Phone <span class="number">8.1</span> 设备因其使用EAP连接时会自动在用户名之前加上设备名称，因此若要用于WP8<span class="number">.1</span>设备应追加一条EAP配置：</span><br><span class="line"></span><br><span class="line">&gt;```设备名称\用户名 : EAP <span class="string">"密码"</span></span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>其中，设备名称可在“设置-关于-手机信息”中查看。</p>
+</blockquote>
+<p>#####<strong>启动StrongSwan</strong></p>
+<figure class="highlight"><figcaption><span>start```</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#10;####iptables&#37197;&#32622;&#10;&#10;&#35201;&#36890;&#36807;VPN&#35775;&#38382;&#22806;&#32593;&#38656;&#35201;&#24320;&#21551;Linux&#20869;&#26680;&#30340;IP&#36716;&#21457;&#21151;&#33021;&#65292;&#32534;&#36753;&#10;&#10;```/etc/sysctl.conf</span><br></pre></td></tr></table></figure>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">net<span class="class">.ipv4</span><span class="class">.ip_forward</span>=<span class="number">1</span></span><br><span class="line">net<span class="class">.ipv6</span><span class="class">.conf</span><span class="class">.all</span><span class="class">.forwarding</span>=<span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>运行<figure class="highlight"><figcaption><span>-p```使之生效。</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#10;&#21516;&#26102;&#24212;&#35813;&#35774;&#32622;iptables&#24320;&#21551;&#38656;&#35201;&#24320;&#25918;&#30340;&#31471;&#21475;&#21644;nat&#36716;&#21457;&#65292;&#36825;&#37324;&#37197;&#32622;&#20960;&#20010;&#21508;&#20010;&#25805;&#20316;&#31995;&#32479;&#24120;&#29992;&#30340;VPN&#40664;&#35748;&#31471;&#21475;&#65306;</span><br></pre></td></tr></table></figure></p>
+<p>iptables -A FORWARD -m state –state RELATED,ESTABLISHED -j ACCEPT<br>iptables -A FORWARD -s 10.0.0.0/24  -j ACCEPT<br>iptables -A INPUT -i eth0 -p esp -j ACCEPT<br>iptables -A INPUT -i eth0 -p udp –dport 500 -j ACCEPT<br>iptables -A INPUT -i eth0 -p tcp –dport 500 -j ACCEPT<br>iptables -A INPUT -i eth0 -p udp –dport 4500 -j ACCEPT<br>iptables -A INPUT -i eth0 -p udp –dport 1701 -j ACCEPT<br>iptables -A INPUT -i eth0 -p tcp –dport 1723 -j ACCEPT<br>iptables -A FORWARD -j REJECT<br>iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o eth0 -j MASQUERADE<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">其中，<span class="number">10.0</span><span class="number">.0</span><span class="number">.0</span>是分配给客户端的IP地址段，应与ipsec所配置的地址段相同。eth0是网卡名称，注意填写实际网卡名称。</span><br><span class="line"></span><br><span class="line">保存并退出，重启iptables使之生效：</span><br><span class="line"></span><br><span class="line">```service iptables restart</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>Tips: CentOS 7.x 使用 firewallD 代替 iptables 作为默认防火墙，可自行禁用并安装 iptables。</p>
+</blockquote>
+<p>###客户端使用</p>
+<p>#####Mac OS X／iOS</p>
+<p>新建VPN：</p>
+<ol>
+<li><p>IPSec ＋ EAP（无需导入任何证书）</p>
+<ul>
+<li>服务器：服务器IP或者URL</li>
+<li>用户名密码：ipsec.secrets文件中EAP前后的那两个</li>
+<li>密钥：PSK密码</li>
+</ul>
+</li>
+<li><p>IPSec ＋ 证书（需导入CA证书和pkcs证书）</p>
+<ul>
+<li>服务器：服务器IP或者URL</li>
+<li>用户名密码：ipsec.secrets文件中EAP前后的那两个（也可用XAUTH的密码）</li>
+<li>打开使用证书并选择导入的证书</li>
+</ul>
+</li>
+<li><p>IKEv2（需导入CA证书）</p>
+<ul>
+<li>服务器：服务器IP或者URL</li>
+<li>远程ID：服务器IP或者URL</li>
+<li>用户名密码：ipsec.secrets文件中EAP前后的那两个</li>
+</ul>
+</li>
+</ol>
+<p>#####Windows 7及更高版本</p>
+<p>导入证书：</p>
+<ul>
+<li>开始菜单搜索 “cmd”，打开后输入 mmc（Microsoft 管理控制台）；</li>
+<li>打开“文件” - “添加/删除管理单元”，添加“证书”单元；</li>
+<li>证书单元的弹出窗口中一定要选 “计算机账户”，之后选 “本地计算机”，确定；</li>
+<li>在左边的 “控制台根节点” 下选择 “证书” - “个人”，然后选右边的 “更多操作” - “所有任务” - “导入” 打开证书导入窗口；</li>
+<li>选择刚才生成的pkcs12证书 client.cert.p12，下一步输入密码，下一步 “证书存储” 选 “个人”；</li>
+<li>导入成功后，把导入的 CA 证书剪切到 “受信任的根证书颁发机构” 的证书文件夹里面。</li>
+<li>打开剩下的那个私人证书，看一下有没有显示 “您有一个与该证书对应的私钥”，以及 “证书路径” 下面是不是显示 “该证书没有问题”；</li>
+<li>然后关闭 mmc，提示 “将控制台设置存入控制台1吗”，选 “否” 即可。</li>
+</ul>
+<p>创建VPN即可。</p>
+<p>#####Android</p>
+<p>IPSec XAUTH PSK</p>
+<p>IPSec预共享密钥即PSK密码。</p>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/linux-strongswan-vpn/" rel="tag">#linux strongswan vpn</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/12/13/hello-world/" rel="next" title="Hello World">
+                <i class="fa fa-chevron-left"></i> Hello World
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="/avatar.jpg" alt="Neal" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Neal</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description"></p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">2</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">1</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            <a href="/tags">
+              <span class="site-state-item-count">1</span>
+              <span class="site-state-item-name">标签</span>
+              </a>
+          </div>
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator">
+            <i class="fa fa-angle-double-up"></i>
+          </div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ios_etc"><span class="nav-number">1.</span> <span class="nav-text">ios etc.</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ios_etc-1"><span class="nav-number">2.</span> <span class="nav-text">ios etc.</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#osx_linux_android_etc"><span class="nav-number">3.</span> <span class="nav-text">osx linux android etc.</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ikev2__28ios_osx_win7_etc-_29"><span class="nav-number">4.</span> <span class="nav-text">ikev2 (ios osx win7 etc.)</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator">
+            <i class="fa fa-angle-double-down"></i>
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2015 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Neal</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT
+  </a>
+</div>
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 1 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>
