@@ -16,7 +16,7 @@ StrongSwan是一个完整的2.4和2.6的Linux内核下的IPsec和IKEv1 的实现
 
 编译并安装：
 
-```
+```bash
 # 若不指定版本号(strongswan.tar.gz)将始终下载最新版本
 wget https://download.strongswan.org/strongswan-5.3.5.tar.gz
 tar xzf strongswan.tar.gz
@@ -32,7 +32,7 @@ make && make install
 
 1. 生成CA证书的私钥，并使用私钥签名CA证书
 
-    ```
+    ```bash
 ipsec pki --gen --outform pem > ca.pem
 ipsec pki --self --in ca.pem --dn "C=com, O=vpn, CN=VPN CA" --ca --outform pem > ca.cert.pem
     ```
@@ -40,7 +40,7 @@ ipsec pki --self --in ca.pem --dn "C=com, O=vpn, CN=VPN CA" --ca --outform pem >
 
 2. 生成服务器证书的私钥，并用CA证书签发服务器证书
 
-    ```
+    ```bash
 ipsec pki --gen --outform pem > server.pem
 ipsec pki --pub --in server.pem | ipsec pki --issue --cacert ca.cert.pem \
     --cakey ca.pem --dn "C=com, O=vpn, CN=${server_name}" \
@@ -63,7 +63,7 @@ ipsec pki --pub --in server.pem | ipsec pki --issue --cacert ca.cert.pem \
 
 3. 生成客户端证书
 
-    ```
+    ```bash
 ipsec pki --gen --outform pem > client.pem
 ipsec pki --pub --in client.pem | ipsec pki --issue --cacert ca.cert.pem \
     --cakey ca.pem --dn "C=com, O=vpn, CN=VPN Client" \
@@ -72,13 +72,13 @@ ipsec pki --pub --in client.pem | ipsec pki --issue --cacert ca.cert.pem \
 
 4. 生成 pkcs12 证书，此处会提示输入两次密码，用于导入证书到其他系统时验证。没有这个密码别人即使拿到了证书也无法使用，可为空
 
-    ```
+    ```bash
 openssl pkcs12 -export -inkey client.pem -in client.cert.pem -name "client" -certfile ca.cert.pem -caname "VPN Client"  -out client.cert.p12
     ```
 
 5. 安装证书
 
-    ```
+    ```bash
 cp -r ca.cert.pem /usr/local/etc/ipsec.d/cacerts/
 cp -r server.cert.pem /usr/local/etc/ipsec.d/certs/
 cp -r server.pem /usr/local/etc/ipsec.d/private/
@@ -176,7 +176,7 @@ include strongswan.d/*.conf
 
 `vi /usr/local/etc/ipsec.secrets`
 
-```
+```bash
 : RSA server.pem
 : PSK "myPSKpw"
 : XAUTH "myXAUTHpw"
@@ -206,7 +206,7 @@ net.ipv6.conf.all.forwarding=1
 
 同时应该设置iptables开启需要开放的端口和nat转发，这里配置几个各个操作系统常用的VPN默认端口：
 
-```
+```bash
 iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A FORWARD -s 10.0.0.0/24  -j ACCEPT
 iptables -A INPUT -i eth0 -p esp -j ACCEPT
