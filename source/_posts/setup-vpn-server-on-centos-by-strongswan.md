@@ -5,14 +5,14 @@ tags: [linux, strongswan, vpn]
 categories: Others
 ---
 
-本文介绍如何利用StrongSwan一步步在CentOS服务器（或者VPS主机）上搭建自己的VPN服务器，支持IPSec协议和最新的IKEv2协议，支持iOS、OS X、Windows7、Android、Linux等，iOS9、OS X10.10以上版本已支持IKEv2协议。
+本文介绍了如何利用StrongSwan一步步在CentOS等Linux服务器（或者其他Linux VPS主机）上搭建自己的VPN服务器，支持IPSec协议和最新的IKEv2协议，支持iOS、OS X、Windows7、Android、Linux等操作系统，iOS9、OS X10.10以上版本均已支持IKEv2 VPN协议。
 <!-- more -->
 
 VPN （Virtual Private Network），是一种常用于连接中、大型企业或团体与团体间的私人网络的通讯方法。可在不安全的网络中传送可靠、安全的信息，或者透过服务器读取被限制的外界资源，俗称“翻墙”。搭建VPN的服务器配置要求不高，一般的VPS主机即可满足，国外有不少物美价廉的主机可供选择，比如Bandwagon、Host US等。本文以搭载了CentOS6.x的VPS主机为例，其他系统可自行修改相应的命令。
 
 ### 安装StrongSwan
 
-StrongSwan是一个完整的2.4和2.6的Linux内核下的IPsec和IKEv1 的实现，当然也完全支持新的IKEv2协议的Linux 2.6内核。可以手动到[官网strongswan.org](https://www.strongswan.org)下载发行包，也可以直接编译源码安装，编译源码的好处是可以指定不同的配置来满足我们的需求。
+StrongSwan是一个完整的2.4和2.6的Linux内核下的IPsec和IKEv1 的实现，当然也完全支持新的IKEv2协议的Linux 2.6内核。可以手动到<a target="_blank" href="https://www.strongswan.org">官网strongswan.org</a>下载发行包，也可以直接编译源码安装，编译源码的好处是可以指定不同的配置来满足我们的需求。
 
 编译并安装：
 
@@ -30,63 +30,68 @@ make && make install
 
 ### 证书配置
 
-1. 生成CA证书的私钥，并使用私钥签名CA证书
+#### 生成CA证书的私钥，并使用私钥签名CA证书
 
-    ```bash
+```bash
 ipsec pki --gen --outform pem > ca.pem
 ipsec pki --self --in ca.pem --dn "C=com, O=vpn, CN=VPN CA" --ca --outform pem > ca.cert.pem
-    ```
-    >Tips：C 表示国家名，O 表示组织名，CN 表示通用名
+```
 
-2. 生成服务器证书的私钥，并用CA证书签发服务器证书
+>Tips：C 表示国家名，O 表示组织名，CN 表示通用名
 
-    ```bash
+#### 生成服务器证书的私钥，并用CA证书签发服务器证书
+
+```bash
 ipsec pki --gen --outform pem > server.pem
 ipsec pki --pub --in server.pem | ipsec pki --issue --cacert ca.cert.pem \
     --cakey ca.pem --dn "C=com, O=vpn, CN=${server_name}" \
     --san="${server_name}" \
     --flag serverAuth --flag ikeIntermediate \
     --outform pem > server.cert.pem
-    ```
+```
 
-	>Tips：
-	>
-	>1. C和O的值必须与CA证书的一致。CN和san建议使用服务器的 IP 地址或 URL，san可设置多个。
-	>
-	>2. iOS 客户端要求 CN 必须是你的服务器的 IP 地址或 URL。
-	>
-	>3. Windows 7 除了对CN的要求之外，还要求必须显式说明这个服务器证书的用途（如用于与服务器进行认证），–flag serverAuth。
-	>
-	>4. 非 iOS 的 Mac OS X 要求了”IP 安全网络密钥互换居间（IP Security IKE Intermediate）“这种增强型密钥用法（EKU），–flag ikdeIntermediate。
-	>
-	>5. Android 和 iOS 都要求服务器别名（serverAltName）为服务器的 URL 或 IP 地址，–san。
+>Tips：
+>
+>1. C和O的值必须与CA证书的一致。CN和san建议使用服务器的 IP 地址或 URL，san可设置多个。
+>
+>2. iOS 客户端要求 CN 必须是你的服务器的 IP 地址或 URL。
+>
+>3. Windows 7 除了对CN的要求之外，还要求必须显式说明这个服务器证书的用途（如用于与服务器进行认证），–flag serverAuth。
+>
+>4. 非 iOS 的 Mac OS X 要求了”IP 安全网络密钥互换居间（IP Security IKE Intermediate）“这种增强型密钥用法（EKU），–flag ikdeIntermediate。
+>
+>5. Android 和 iOS 都要求服务器别名（serverAltName）为服务器的 URL 或 IP 地址，–san。
 
-3. 生成客户端证书
+#### 生成客户端证书
 
-    ```bash
+```bash
 ipsec pki --gen --outform pem > client.pem
 ipsec pki --pub --in client.pem | ipsec pki --issue --cacert ca.cert.pem \
     --cakey ca.pem --dn "C=com, O=vpn, CN=VPN Client" \
     --outform pem > client.cert.pem
-    ```
+```
 
-4. 生成 pkcs12 证书，此处会提示输入两次密码，用于导入证书到其他系统时验证。没有这个密码别人即使拿到了证书也无法使用，可为空
+#### 生成 pkcs12 证书
 
-    ```bash
+此处会提示输入两次密码，用于导入证书到其他系统时验证。没有这个密码别人即使拿到了证书也无法使用，可为空
+
+```bash
 openssl pkcs12 -export -inkey client.pem -in client.cert.pem -name "client" -certfile ca.cert.pem -caname "VPN Client"  -out client.cert.p12
-    ```
+```
 
-5. 安装证书
+#### 安装证书
 
-    ```bash
+```bash
 cp -r ca.cert.pem /usr/local/etc/ipsec.d/cacerts/
 cp -r server.cert.pem /usr/local/etc/ipsec.d/certs/
 cp -r server.pem /usr/local/etc/ipsec.d/private/
 cp -r client.cert.pem /usr/local/etc/ipsec.d/certs/
 cp -r client.pem  /usr/local/etc/ipsec.d/private/
-    ```
+```
 
-6. 将上述生成的CA证书（ca.cert.pem）、客户端证书（client.cert.pem）、pkcs12证书（client.cert.p12）使用FTP或者scp拷贝出来，以备供客户端使用
+#### 保存证书
+
+将上述生成的CA证书（ca.cert.pem）、客户端证书（client.cert.pem）、pkcs12证书（client.cert.p12）使用FTP或者scp拷贝出来，以备供客户端使用
 
 ### StrongSwan配置
 
@@ -204,6 +209,9 @@ net.ipv6.conf.all.forwarding=1
 
 运行`sysctl -p`使之生效。
 
+>应确保sysctl修改成功，没有报错，如果报错请参考：
+><a target="_blank" href="http://www.mynook.xyz/2016/modify-sysctl-conf-error/">CentOS 6.x 下修改sysctl.conf报错问题解决</a>
+
 同时应该设置iptables开启需要开放的端口和nat转发，这里配置几个各个操作系统常用的VPN默认端口：
 
 ```bash
@@ -271,3 +279,10 @@ iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o eth0 -j MASQUERADE
 IPSec XAUTH PSK
 
 IPSec预共享密钥即PSK密码。
+
+### 一键安装脚本
+
+制作了一个一键安装脚本，不喜欢折腾的可使用该脚本，按照说明运行即可。适用于 CentOS 6.x 及 Ubuntu。    
+<a target="_blank" href="https://github.com/nealyg/one-key-vpn-server">一键安装脚本</a>
+
+>本文部分数据来源于网络，转载请注明出处。
