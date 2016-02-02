@@ -27,8 +27,8 @@ since: 2015
 # Remove leading slashes ( "/archives" -> "archives" )
 menu:
   home: /
-  #categories: /categories
-  #about: /about
+  categories: /categories
+  about: /about
   archives: /archives
   tags: /tags
   #commonweal: /404.html
@@ -147,7 +147,7 @@ auto_excerpt:
   length: 150
 
 # Use Lato font
-use_font_lato: true
+use_font_lato: false
 
 
 
