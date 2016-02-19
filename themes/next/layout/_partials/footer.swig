@@ -1,13 +1,14 @@
 <div class="copyright" >
+  &copy; <span class="author" itemprop="copyrightHolder">{{ config.author }}</span>
   {% set current = date(Date.now(), "YYYY") %}
-  &copy; {% if theme.since and theme.since != current %} {{ theme.since }} - {% endif %}
+  {% if theme.since and theme.since != current %} {{ theme.since }} - {% endif %}
   <span itemprop="copyrightYear">{{ current }}</span>
-  <span class="with-love">
+  {# <span class="with-love">
     <i class="icon-next-heart fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">{{ config.author }}</span>
+  </span> #}
 </div>
 
+{#
 <div class="powered-by">
   {{ __('footer.powered', '<a class="theme-link" href="http://hexo.io">Hexo</a>') }}
 </div>
@@ -18,5 +19,6 @@
     NexT{% if theme.scheme %}.{{ theme.scheme }}{% endif %}
   </a>
 </div>
+#}
 
 {% block footer %}{% endblock %}
