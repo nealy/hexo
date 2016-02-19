@@ -6,7 +6,7 @@
 favicon: /favicon.ico
 
 # Set default keywords (Use a comma to separate)
-keywords: "Hexo, NexT"
+keywords: "Hexo, Neal"
 
 # Set rss to false to disable feed link.
 # Leave rss as empty to use site's feed link.
@@ -78,8 +78,8 @@ sidebar: hide
 
 
 # Social links
-# social:
-  #GitHub:
+social:
+  GitHub: https://github.com/nealyg
   #Others:
 
 # Social Icons
@@ -163,7 +163,7 @@ mathjax:
 #swiftype_key:
 
 # Baidu Analytics ID
-#baidu_analytics:
+baidu_analytics: 5d778e5ea4388f5b3330b000324e4821
 
 # Duoshuo ShortName
 #duoshuo_shortname:
