@@ -21,21 +21,22 @@ server.xml 元素包含四大类：
 
 文件结构：
 ```
-<server>
-    `<Service>`
-        <connector/>
-        <connector/>
-        `<Engine>`
-            `<Host>`
-                <context/>
-            </host>
-            `<Host>`
-                <context/>
-                <context/>
-            </host>
-        </engine>
-    </service>
-<server>
+<Server>
+    <Service>
+        <Connector/>
+        <Connector/>
+        <Engine>
+            <Host>
+                <Context>
+                <Context/>
+            </Host>
+            <Host>
+                <Context/>
+                <Context/>
+            </Host>
+        </Engine>
+    </Service>
+<Server>
 ```
 
 ### Server 元素
