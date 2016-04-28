@@ -80,6 +80,10 @@ Github 提供了一段脚本来更改 commits 历史的作者和/或正确的邮
 
 6. 将正确的历史　push 到　Github。
 
+    ```
+    git push --force --tags origin 'refs/heads/*'
+    ```
+
 7. 清除临时 clone。
 
     ```
