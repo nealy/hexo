@@ -1,7 +1,7 @@
 title: 在Cygwin中使用msysgit
 date: 2016-04-14 15:45:53
 updated: 2016-04-14 15:45:53
-tags: [git, cygwin]
+tags: [cygwin]
 categories: git
 ---
 
