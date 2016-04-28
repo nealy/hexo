@@ -78,4 +78,4 @@ avatar: /avatar.jpg
 ## Docs: http://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repo: https://github.com/nealyg/hexo.git
+  repo: https://github.com/nealy/hexo.git
