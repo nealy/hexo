@@ -1,0 +1,848 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="j2ee,tomcat," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="一隅之足" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="conf/server.xml 是 Servlet/JSP 容器 Tomcat 的主要配置文件，使用 XML 的方式描述了 WebApp 的运行方式。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tomcat 配置文件 server.xml 详解">
+<meta property="og:url" content="http://nealyg.github.io/hexo/2016/tomcat-server-xml-configuration-reference/index.html">
+<meta property="og:site_name" content="一隅之足">
+<meta property="og:description" content="conf/server.xml 是 Servlet/JSP 容器 Tomcat 的主要配置文件，使用 XML 的方式描述了 WebApp 的运行方式。">
+<meta property="og:updated_time" content="2016-04-07T06:59:56.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Tomcat 配置文件 server.xml 详解">
+<meta name="twitter:description" content="conf/server.xml 是 Servlet/JSP 容器 Tomcat 的主要配置文件，使用 XML 的方式描述了 WebApp 的运行方式。">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'hide',
+    motion: true
+  };
+</script>
+
+  <title> Tomcat 配置文件 server.xml 详解 | 一隅之足 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?5d778e5ea4388f5b3330b000324e4821";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">一隅之足</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-th fa-fw"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Tomcat 配置文件 server.xml 详解
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2016-04-07T14:59:56+08:00" content="2016-04-07">
+              2016-04-07
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><p><code>conf/server.xml</code> 是 Servlet/JSP 容器 Tomcat 的主要配置文件，使用 XML 的方式描述了 WebApp 的运行方式。<br><a id="more"></a></p>
+<p>在 server.xml 中的元素（element）和属性（properties）是区分大小写的，并且支持 Apache Ant 方式的变量替换（Apache Ant-style variable substitution）。在配置文件中还支持以 <code>${propname}</code> 的方式读取系统变量 propname。支持 系统环境变量（包括 <code>-D</code> 语法）、JVM 变量和配置在 <code>$CATALINA_BASE/conf/catalina.properties file</code> 文件中的变量。</p>
+<p>server.xml 元素包含四大类：</p>
+<blockquote>
+<p>1、顶层类元素 - <code>&lt;Server&gt;</code> 是根元素，<code>&lt;Service&gt;</code> 表示一组与一个 <code>&lt;Engine&gt;</code> 有关的连接器。</p>
+<p>2、连接器类元素 - <code>&lt;Connector&gt;</code>，客户端和容器类元素的通讯接口。</p>
+<p>3、容器类元素 - <code>&lt;Engine&gt;</code>、<code>&lt;Host&gt;</code> 和 <code>&lt;Context&gt;</code>，处理客户请求并且生成响应结果。</p>
+<p>4、嵌套类元素 - <code>&lt;logger&gt;</code>、<code>&lt;Value&gt;</code> 和 <code>&lt;Realm&gt;</code>，可以加入到容器中的元素。</p>
+</blockquote>
+<p>文件结构：<br><figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="section">&lt;Server&gt;</span></span><br><span class="line">    <span class="section">&lt;Service&gt;</span></span><br><span class="line">        <span class="section">&lt;Connector/&gt;</span></span><br><span class="line">        <span class="section">&lt;Connector/&gt;</span></span><br><span class="line">        <span class="section">&lt;Engine&gt;</span></span><br><span class="line">            <span class="section">&lt;Host&gt;</span></span><br><span class="line">                <span class="section">&lt;Context&gt;</span></span><br><span class="line">                <span class="section">&lt;Context/&gt;</span></span><br><span class="line">            <span class="section">&lt;/Host&gt;</span></span><br><span class="line">            <span class="section">&lt;Host&gt;</span></span><br><span class="line">                <span class="section">&lt;Context/&gt;</span></span><br><span class="line">                <span class="section">&lt;Context/&gt;</span></span><br><span class="line">            <span class="section">&lt;/Host&gt;</span></span><br><span class="line">        <span class="section">&lt;/Engine&gt;</span></span><br><span class="line">    <span class="section">&lt;/Service&gt;</span></span><br><span class="line"><span class="section">&lt;Server&gt;</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="Server-元素"><a href="#Server-元素" class="headerlink" title="Server 元素"></a>Server 元素</h3><p><code>&lt;Server&gt;</code> 是 Tomcat 实例的顶层元素，由 org.apache.catalina.Server 接口定义，它可以包含一个或多个 <code>&lt;Service&gt;</code> 元素，并且不能做为任何元素的子元素。一个 <code>&lt;Server&gt;</code> 是一个提供完整JVM的独立组件，它可以代表整个容器，但它本身不是一个容器，不可以定义 <code>&lt;value&gt;</code> 或 <code>&lt;loggers&gt;</code> 之类的子组件。</p>
+<p>属性说明：</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>port</td>
+<td>指定一个端口，这个端口负责监听关闭 Tomcat 的请求</td>
+</tr>
+<tr>
+<td>shut down</td>
+<td>向以上端口发送的关闭服务器的命令字符串，通常为 <code>SHUTDOWN</code></td>
+</tr>
+</tbody>
+</table>
+<p>对于一个已经开启的 Tomcat 服务器，可以在 cmd 下使用 <code>telnet localhost 8005</code> 命令进行连接，然后输入 <code>SHUTDOWN</code> 命令就可以关闭服务器。</p>
+<h3 id="Service-元素"><a href="#Service-元素" class="headerlink" title="Service 元素"></a>Service 元素</h3><p><code>&lt;Service&gt;</code> 是一个集合，它由一个或者多个 <code>&lt;Connector&gt;</code> 以及一个 <code>&lt;Engine&gt;</code> 组成，这个 <code>&lt;Engine&gt;</code> 负责处理所有 <code>&lt;Connector&gt;</code> 所获得的客户请求。每个 <code>&lt;Service&gt;</code> 元素只能有一个 <code>&lt;Engine&gt;</code> 元素。 <code>&lt;Service&gt;</code> 本身也不是容器。</p>
+<p>属性说明：</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td><code>&lt;Service&gt;</code> 的名称</td>
+</tr>
+</tbody>
+</table>
+<h3 id="Connector-元素"><a href="#Connector-元素" class="headerlink" title="Connector 元素"></a>Connector 元素</h3><p><code>&lt;Connector&gt;</code> 是直接与用户交互的组件，负责接受用户请求和向客户返回响应结果。 </p>
+<p>属性说明：</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>port</td>
+<td><code>&lt;Connector&gt;</code> 所监听的端口。在浏览器中可以通过输入 <code>url:port</code> 的方式提交给对应的 <code>&lt;Connector&gt;</code>。因为浏览器的默认端口是 80，所以如果把 <code>&lt;Connector&gt;</code> 的 port 设成 80 的话，可以直接使用 url 进行访问，不用在后边再跟一个端口号。</td>
+</tr>
+<tr>
+<td>protocol</td>
+<td>设定 Http 协议，默认是 HTTP/1.1。</td>
+</tr>
+<tr>
+<td>minThreads</td>
+<td>服务器启动时创建的处理用户请求的线程数。</td>
+</tr>
+<tr>
+<td>maxThreads</td>
+<td>可以创建的最大的处理用户请求的线程数。</td>
+</tr>
+<tr>
+<td>minSpareThreads</td>
+<td>最小备用线程数。</td>
+</tr>
+<tr>
+<td>maxSpareThreads</td>
+<td>最大备用线程数。</td>
+</tr>
+<tr>
+<td>acceptCount</td>
+<td>当所有可以使用的处理请求的线程都被用光时,可以放到处理队列中的请求数,超过这个数的请求将不予处理，而返回 Connection refused 错误。</td>
+</tr>
+<tr>
+<td>redirectPort</td>
+<td>服务器正在处理 http 请求时收到了一个 SSL 传输请求后重定向的端口号。（即当请求是 https 时，将它转发到的端口）。</td>
+</tr>
+<tr>
+<td>enableLookups</td>
+<td>如果为 true，表示支持域名解析，则可以在 web 应用中通过调用 request.getRemoteHost() 进行 DNS 查询来得到远程客户端的实际主机名；若为 false 则不进行 DNS 查询，而是返回其 ip 地址。默认值为 true。</td>
+</tr>
+<tr>
+<td>connectionTimeout</td>
+<td>等待超时的时间数（以毫秒为单位），如果为 -1 表示不限制客户连接的时间。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="Engine-元素"><a href="#Engine-元素" class="headerlink" title="Engine 元素"></a>Engine 元素</h3><p>它处理在同一个 <code>&lt;Service&gt;</code> 中所有 <code>&lt;Connector&gt;</code> 元素接收到的客户请求。它匹配请求和自己的虚拟主机，并将请求发给对应的 <code>&lt;Host&gt;</code> 处理，默认的主机是 localhost。</p>
+<p>属性说明：</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>engine的名称，对应目录 <code>/conf/Catalina</code>。</td>
+</tr>
+<tr>
+<td>defaultHost</td>
+<td>默认的处理请求的虚拟主机，至少与下面一个Host的name属性一样。对应 <code>/conf/Catalina/localhost</code>。</td>
+</tr>
+<tr>
+<td>Debug</td>
+<td>日志等级。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="Host-元素"><a href="#Host-元素" class="headerlink" title="Host 元素"></a>Host 元素</h3><p>一个 <code>&lt;Engine&gt;</code> 元素可以包含多个 <code>&lt;Host&gt;</code> 元素，每个 <code>&lt;Host&gt;</code> 元素定义一个虚拟主机，它包含一个或多个web应用。</p>
+<p>属性说明：</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>虚拟主机名，对应目录 <code>/conf/Catalina/localhost</code>。</td>
+</tr>
+<tr>
+<td>appBase</td>
+<td>指定虚拟主机的目录，默认为 <code>/webapps</code>。它将请求 url 与该虚拟主机的 <code>&lt;Context&gt;</code> 进行匹配，并把请求转给对应的 <code>&lt;Context&gt;</code> 来处理。</td>
+</tr>
+<tr>
+<td>Debug</td>
+<td>日志等级。</td>
+</tr>
+<tr>
+<td>autoDeploy</td>
+<td>默认为 true，表示如果有新的 Web 应用放入 appBase 并且 Tomcat 在运行的情况下，自动载入应用。</td>
+</tr>
+<tr>
+<td>unpackWARs</td>
+<td>如果设置为 true，表示把war文件先展开再运行。如果为 false则直接运行 war 文件。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="Context-元素"><a href="#Context-元素" class="headerlink" title="Context 元素"></a>Context 元素</h3><p>代表运行在虚拟主机上的单个 web 应用。一个 Host&gt; 可以包含多个 <code>&lt;Context&gt;</code> 元素。每个 web 应用有唯一个相对应的 <code>&lt;Context&gt;</code> 代表 web 应用自身。</p>
+<p>属性说明：</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>path</td>
+<td>Web应用名，在使用 url 访问 <code>&lt;Host&gt;</code> 下的web应用时，通过 <code>http://localhst/website</code> 的形式。其中 localhost 为上文所说的 <code>&lt;Host&gt;</code> 的 name，而 website 就是这里的 path。也就是说当一具请求到来时，<code>&lt;Engine&gt;</code> 先根据 host name = localhost 来确定所要求的主机，再根据 context path = website 确定用户所请求的 web 应用。</td>
+</tr>
+<tr>
+<td>docBase</td>
+<td>Web应用的具体存放路径</td>
+</tr>
+<tr>
+<td>Debug</td>
+<td>日志等级。</td>
+</tr>
+<tr>
+<td>autoDeploy</td>
+<td>默认为 true，表示如果有新的 web 应用放入 appBase 并且 Tomcat 在运行的情况下，自动载入应用。</td>
+</tr>
+<tr>
+<td>unpackWARs</td>
+<td>如果设置为 true，表示把 war 文件先展开再运行。如果为 false 则直接运行 war 文件。</td>
+</tr>
+</tbody>
+</table>
+<p><a href="https://tomcat.apache.org/tomcat-8.0-doc/config/index.html" target="_blank" rel="external">Reference</a></p>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/j2ee/" rel="tag">#j2ee</a>
+          
+            <a href="/tags/tomcat/" rel="tag">#tomcat</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/modify-sysctl-conf-error/" rel="next" title="CentOS 6.x 下修改sysctl.conf报错问题解决">
+                <i class="fa fa-chevron-left"></i> CentOS 6.x 下修改sysctl.conf报错问题解决
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/use-msysgit-in-cygwin/" rel="prev" title="在Cygwin中使用msysgit">
+                在Cygwin中使用msysgit <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="/avatar.jpg" alt="Neal" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Neal</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description"></p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">5</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            <a href="/categories">
+              <span class="site-state-item-count">3</span>
+              <span class="site-state-item-name">分类</span>
+              </a>
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            <a href="/tags">
+              <span class="site-state-item-count">7</span>
+              <span class="site-state-item-name">标签</span>
+              </a>
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/nealy" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator">
+            <i class="fa fa-angle-double-up"></i>
+          </div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Server-元素"><span class="nav-number">1.</span> <span class="nav-text">Server 元素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Service-元素"><span class="nav-number">2.</span> <span class="nav-text">Service 元素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Connector-元素"><span class="nav-number">3.</span> <span class="nav-text">Connector 元素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Engine-元素"><span class="nav-number">4.</span> <span class="nav-text">Engine 元素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Host-元素"><span class="nav-number">5.</span> <span class="nav-text">Host 元素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Context-元素"><span class="nav-number">6.</span> <span class="nav-text">Context 元素</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator">
+            <i class="fa fa-angle-double-down"></i>
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  &copy; <span class="author" itemprop="copyrightHolder">Neal</span>
+  
+   2015 - 
+  <span itemprop="copyrightYear">2016</span>
+  
+</div>
+
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 1 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

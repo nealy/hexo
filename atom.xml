@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>一隅之足</title>
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://nealyg.github.io/hexo/"/>
+  <updated>2016-04-28T05:48:43.000Z</updated>
+  <id>http://nealyg.github.io/hexo/</id>
+  
+  <author>
+    <name>Neal</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>修改 Github commits 的作者信息</title>
+    <link href="http://nealyg.github.io/hexo/2016/changing-github-author-info-in-existing-commits/"/>
+    <id>http://nealyg.github.io/hexo/2016/changing-github-author-info-in-existing-commits/</id>
+    <published>2016-04-28T05:48:43.000Z</published>
+    <updated>2016-04-28T05:48:43.000Z</updated>
+    
+    <content type="html">&lt;p&gt;有时候在不同电脑上提交代码到 Github 上的时候，经常会忘记设置 &lt;code&gt;user.email&lt;/code&gt;，某些系统（比如 Mac OS X） 就会默认使用本地地址作为 Email 地址来 commit change，这样 Github 上就出现一大堆 contribution graph 空白了，因为这些 commits 的作者并不是你（邮箱不对）。那么对这些已经提交的 changes 该如何补救呢？&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;首先，应该正确配置邮箱和用户名：&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;git config --global user.email &amp;quot;youremail@gmail.com&amp;quot;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;git config --global user.name &amp;quot;your name&amp;quot;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;但这种只能对以后的commit起作用了。如果想要修改之前的信息的话，Github 也提供了完整的解决方案。&lt;br&gt;需要注意的是，想要改变已经存在的 commit 的用户名和/或邮箱地址，就必须重写整个 Github 仓库的历史记录。&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;警告：这种行为对仓库具有破坏性。如果你与他人协同工作，重写历史记录并不是一种好的做法，应当仅用于紧急情况。&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;h3 id=&quot;使用脚本来重写仓库的-git-历史&quot;&gt;&lt;a href=&quot;#使用脚本来重写仓库的-git-历史&quot; class=&quot;headerlink&quot; title=&quot;使用脚本来重写仓库的 git 历史&quot;&gt;&lt;/a&gt;使用脚本来重写仓库的 git 历史&lt;/h3&gt;&lt;p&gt;Github 提供了一段脚本来更改 commits 历史的作者和/或正确的邮箱地址。&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;注意：执行这段脚本会重写仓库里所有协作者的历史。完成以下操作后，任何 fork 或 clone 的人都必须获取重写后的历史，并把所有本地修改 rebase 到重写后的历史中方可。&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;首先，在执行这段脚本之前，你需要准备的是：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;欲修改的旧的用户名和/或邮箱地址&lt;/li&gt;
+&lt;li&gt;正确的用户名和/或邮箱地址&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;然后：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;打开终端（Mac 或 Linux 用户）或命令行（Windows 用户）。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;创建一个全新的、空的（bare） clone （repo.git 替换为你的项目，下同）&lt;/p&gt;
+ &lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;git &lt;span class=&quot;built_in&quot;&gt;clone&lt;/span&gt; --bare https://github.com/user/repo.git&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;built_in&quot;&gt;cd&lt;/span&gt; repo.git&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;拷贝、粘贴脚本，并根据自身情况替换以下信息。&lt;/p&gt;
+&lt;p&gt; &lt;code&gt;OLD_EMAIL&lt;/code&gt;&lt;br&gt; &lt;code&gt;CORRECT_NAME&lt;/code&gt;&lt;br&gt; &lt;code&gt;CORRECT_EMAIL&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt; 脚本：&lt;/p&gt;
+ &lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;#!/bin/sh&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;git filter-branch --env-filter &lt;span class=&quot;string&quot;&gt;&#39;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;OLD_EMAIL=&quot;your-old-email@example.com&quot;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;CORRECT_NAME=&quot;Your Correct Name&quot;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;CORRECT_EMAIL=&quot;your-correct-email@example.com&quot;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;if [ &quot;$GIT_COMMITTER_EMAIL&quot; = &quot;$OLD_EMAIL&quot; ]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;then&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    export GIT_COMMITTER_NAME=&quot;$CORRECT_NAME&quot;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    export GIT_COMMITTER_EMAIL=&quot;$CORRECT_EMAIL&quot;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;fi&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;if [ &quot;$GIT_AUTHOR_EMAIL&quot; = &quot;$OLD_EMAIL&quot; ]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;then&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    export GIT_AUTHOR_NAME=&quot;$CORRECT_NAME&quot;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    export GIT_AUTHOR_EMAIL=&quot;$CORRECT_EMAIL&quot;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;fi&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&#39;&lt;/span&gt; --tag-name-filter cat -- --branches --tags&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;按 Enter 键执行脚本。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;查看 Git 历史检查是否正确。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;将正确的历史　push 到　Github。&lt;/p&gt;
+ &lt;figure class=&quot;highlight brainfuck&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;comment&quot;&gt;git&lt;/span&gt; &lt;span class=&quot;comment&quot;&gt;push&lt;/span&gt; &lt;span class=&quot;literal&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;literal&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;comment&quot;&gt;force&lt;/span&gt; &lt;span class=&quot;literal&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;literal&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;comment&quot;&gt;tags&lt;/span&gt; &lt;span class=&quot;comment&quot;&gt;origin&lt;/span&gt; &lt;span class=&quot;comment&quot;&gt;&#39;refs/heads/*&#39;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;清除临时 clone。&lt;/p&gt;
+ &lt;figure class=&quot;highlight gams&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;title&quot;&gt;cd&lt;/span&gt;&lt;/span&gt; ..&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;rm -rf repo.git&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Reference: &lt;a href=&quot;https://help.github.com/articles/changing-author-info/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Changing author info&lt;/a&gt;&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;有时候在不同电脑上提交代码到 Github 上的时候，经常会忘记设置 &lt;code&gt;user.email&lt;/code&gt;，某些系统（比如 Mac OS X） 就会默认使用本地地址作为 Email 地址来 commit change，这样 Github 上就出现一大堆 contribution graph 空白了，因为这些 commits 的作者并不是你（邮箱不对）。那么对这些已经提交的 changes 该如何补救呢？&lt;br&gt;
+    
+    </summary>
+    
+      <category term="git" scheme="http://nealyg.github.io/hexo/categories/git/"/>
+    
+    
+      <category term="github" scheme="http://nealyg.github.io/hexo/tags/github/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>在Cygwin中使用msysgit</title>
+    <link href="http://nealyg.github.io/hexo/2016/use-msysgit-in-cygwin/"/>
+    <id>http://nealyg.github.io/hexo/2016/use-msysgit-in-cygwin/</id>
+    <published>2016-04-14T07:45:53.000Z</published>
+    <updated>2016-04-14T07:45:53.000Z</updated>
+    
+    <content type="html">&lt;p&gt;&lt;code&gt;Cygwin&lt;/code&gt; 是一个在 windows 平台上运行的优秀的类 UNIX 模拟环境，是 cygnus solutions 公司开发的自由软件。Cygwin 内嵌支持 git，对于使用 git 的开发者来讲，是不可多得的优秀工具。但由于内嵌的 git 版本过低，而且对于文件系统庞大的支持不是非常友好，所以我们使用 msysgit 来替换内嵌的 git 程序来提高 git 性能。这样既可以保留 Cygwin 的优雅界面，又拥有强大的性能，一举两得。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;首先，当然需要安装 Cygwin 和 msysgit，很简单，不多说。&lt;br&gt;Cygwin 官网： &lt;a href=&quot;https://www.cygwin.com&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;https://www.cygwin.com&lt;/a&gt;&lt;br&gt;msysgit 官网： &lt;a href=&quot;https://git-scm.com&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;https://git-scm.com&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;接下来就来看看如何替换 Cygwin 中的 git：&lt;br&gt;假设 Cygwin 安装目录是 &lt;code&gt;C:\cygwin64&lt;/code&gt;，msysgit 安装目录是 &lt;code&gt;C:\Program Files (x86)\Git&lt;/code&gt;。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Rename C:\cygwin64\bin\git.exe to C:\cygwin64\bin\git.cygwin64.exe (to back it up)&lt;/li&gt;
+&lt;li&gt;Copy C:\Program Files (x86)\Git\bin\git.exe to C:\cygwin64\bin&lt;/li&gt;
+&lt;li&gt;Copy the folder C:\Program Files (x86)\Git\libexec to C:\cygwin64\ (root path)&lt;/li&gt;
+&lt;li&gt;From within cygwin environment, run git config –global color.ui always&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;需要注意的是，&lt;code&gt;C:\Program Files (x86)\Git\bin&lt;/code&gt; 需要添加到环境变量 &lt;code&gt;path&lt;/code&gt; 中。&lt;/p&gt;
+&lt;p&gt;Enjoy!&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;code&gt;Cygwin&lt;/code&gt; 是一个在 windows 平台上运行的优秀的类 UNIX 模拟环境，是 cygnus solutions 公司开发的自由软件。Cygwin 内嵌支持 git，对于使用 git 的开发者来讲，是不可多得的优秀工具。但由于内嵌的 git 版本过低，而且对于文件系统庞大的支持不是非常友好，所以我们使用 msysgit 来替换内嵌的 git 程序来提高 git 性能。这样既可以保留 Cygwin 的优雅界面，又拥有强大的性能，一举两得。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="git" scheme="http://nealyg.github.io/hexo/categories/git/"/>
+    
+    
+      <category term="cygwin" scheme="http://nealyg.github.io/hexo/tags/cygwin/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Tomcat 配置文件 server.xml 详解</title>
+    <link href="http://nealyg.github.io/hexo/2016/tomcat-server-xml-configuration-reference/"/>
+    <id>http://nealyg.github.io/hexo/2016/tomcat-server-xml-configuration-reference/</id>
+    <published>2016-04-07T06:59:56.000Z</published>
+    <updated>2016-04-07T06:59:56.000Z</updated>
+    
+    <content type="html">&lt;p&gt;&lt;code&gt;conf/server.xml&lt;/code&gt; 是 Servlet/JSP 容器 Tomcat 的主要配置文件，使用 XML 的方式描述了 WebApp 的运行方式。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;在 server.xml 中的元素（element）和属性（properties）是区分大小写的，并且支持 Apache Ant 方式的变量替换（Apache Ant-style variable substitution）。在配置文件中还支持以 &lt;code&gt;${propname}&lt;/code&gt; 的方式读取系统变量 propname。支持 系统环境变量（包括 &lt;code&gt;-D&lt;/code&gt; 语法）、JVM 变量和配置在 &lt;code&gt;$CATALINA_BASE/conf/catalina.properties file&lt;/code&gt; 文件中的变量。&lt;/p&gt;
+&lt;p&gt;server.xml 元素包含四大类：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;1、顶层类元素 - &lt;code&gt;&amp;lt;Server&amp;gt;&lt;/code&gt; 是根元素，&lt;code&gt;&amp;lt;Service&amp;gt;&lt;/code&gt; 表示一组与一个 &lt;code&gt;&amp;lt;Engine&amp;gt;&lt;/code&gt; 有关的连接器。&lt;/p&gt;
+&lt;p&gt;2、连接器类元素 - &lt;code&gt;&amp;lt;Connector&amp;gt;&lt;/code&gt;，客户端和容器类元素的通讯接口。&lt;/p&gt;
+&lt;p&gt;3、容器类元素 - &lt;code&gt;&amp;lt;Engine&amp;gt;&lt;/code&gt;、&lt;code&gt;&amp;lt;Host&amp;gt;&lt;/code&gt; 和 &lt;code&gt;&amp;lt;Context&amp;gt;&lt;/code&gt;，处理客户请求并且生成响应结果。&lt;/p&gt;
+&lt;p&gt;4、嵌套类元素 - &lt;code&gt;&amp;lt;logger&amp;gt;&lt;/code&gt;、&lt;code&gt;&amp;lt;Value&amp;gt;&lt;/code&gt; 和 &lt;code&gt;&amp;lt;Realm&amp;gt;&lt;/code&gt;，可以加入到容器中的元素。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;文件结构：&lt;br&gt;&lt;figure class=&quot;highlight apache&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;section&quot;&gt;&amp;lt;Server&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;section&quot;&gt;&amp;lt;Service&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;section&quot;&gt;&amp;lt;Connector/&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;section&quot;&gt;&amp;lt;Connector/&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;section&quot;&gt;&amp;lt;Engine&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;            &lt;span class=&quot;section&quot;&gt;&amp;lt;Host&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;                &lt;span class=&quot;section&quot;&gt;&amp;lt;Context&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;                &lt;span class=&quot;section&quot;&gt;&amp;lt;Context/&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;            &lt;span class=&quot;section&quot;&gt;&amp;lt;/Host&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;            &lt;span class=&quot;section&quot;&gt;&amp;lt;Host&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;                &lt;span class=&quot;section&quot;&gt;&amp;lt;Context/&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;                &lt;span class=&quot;section&quot;&gt;&amp;lt;Context/&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;            &lt;span class=&quot;section&quot;&gt;&amp;lt;/Host&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;section&quot;&gt;&amp;lt;/Engine&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;section&quot;&gt;&amp;lt;/Service&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;section&quot;&gt;&amp;lt;Server&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h3 id=&quot;Server-元素&quot;&gt;&lt;a href=&quot;#Server-元素&quot; class=&quot;headerlink&quot; title=&quot;Server 元素&quot;&gt;&lt;/a&gt;Server 元素&lt;/h3&gt;&lt;p&gt;&lt;code&gt;&amp;lt;Server&amp;gt;&lt;/code&gt; 是 Tomcat 实例的顶层元素，由 org.apache.catalina.Server 接口定义，它可以包含一个或多个 &lt;code&gt;&amp;lt;Service&amp;gt;&lt;/code&gt; 元素，并且不能做为任何元素的子元素。一个 &lt;code&gt;&amp;lt;Server&amp;gt;&lt;/code&gt; 是一个提供完整JVM的独立组件，它可以代表整个容器，但它本身不是一个容器，不可以定义 &lt;code&gt;&amp;lt;value&amp;gt;&lt;/code&gt; 或 &lt;code&gt;&amp;lt;loggers&amp;gt;&lt;/code&gt; 之类的子组件。&lt;/p&gt;
+&lt;p&gt;属性说明：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;属性&lt;/th&gt;
+&lt;th&gt;说明&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;port&lt;/td&gt;
+&lt;td&gt;指定一个端口，这个端口负责监听关闭 Tomcat 的请求&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;shut down&lt;/td&gt;
+&lt;td&gt;向以上端口发送的关闭服务器的命令字符串，通常为 &lt;code&gt;SHUTDOWN&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;对于一个已经开启的 Tomcat 服务器，可以在 cmd 下使用 &lt;code&gt;telnet localhost 8005&lt;/code&gt; 命令进行连接，然后输入 &lt;code&gt;SHUTDOWN&lt;/code&gt; 命令就可以关闭服务器。&lt;/p&gt;
+&lt;h3 id=&quot;Service-元素&quot;&gt;&lt;a href=&quot;#Service-元素&quot; class=&quot;headerlink&quot; title=&quot;Service 元素&quot;&gt;&lt;/a&gt;Service 元素&lt;/h3&gt;&lt;p&gt;&lt;code&gt;&amp;lt;Service&amp;gt;&lt;/code&gt; 是一个集合，它由一个或者多个 &lt;code&gt;&amp;lt;Connector&amp;gt;&lt;/code&gt; 以及一个 &lt;code&gt;&amp;lt;Engine&amp;gt;&lt;/code&gt; 组成，这个 &lt;code&gt;&amp;lt;Engine&amp;gt;&lt;/code&gt; 负责处理所有 &lt;code&gt;&amp;lt;Connector&amp;gt;&lt;/code&gt; 所获得的客户请求。每个 &lt;code&gt;&amp;lt;Service&amp;gt;&lt;/code&gt; 元素只能有一个 &lt;code&gt;&amp;lt;Engine&amp;gt;&lt;/code&gt; 元素。 &lt;code&gt;&amp;lt;Service&amp;gt;&lt;/code&gt; 本身也不是容器。&lt;/p&gt;
+&lt;p&gt;属性说明：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;属性&lt;/th&gt;
+&lt;th&gt;说明&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;name&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;Service&amp;gt;&lt;/code&gt; 的名称&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3 id=&quot;Connector-元素&quot;&gt;&lt;a href=&quot;#Connector-元素&quot; class=&quot;headerlink&quot; title=&quot;Connector 元素&quot;&gt;&lt;/a&gt;Connector 元素&lt;/h3&gt;&lt;p&gt;&lt;code&gt;&amp;lt;Connector&amp;gt;&lt;/code&gt; 是直接与用户交互的组件，负责接受用户请求和向客户返回响应结果。 &lt;/p&gt;
+&lt;p&gt;属性说明：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;属性&lt;/th&gt;
+&lt;th&gt;说明&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;port&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;Connector&amp;gt;&lt;/code&gt; 所监听的端口。在浏览器中可以通过输入 &lt;code&gt;url:port&lt;/code&gt; 的方式提交给对应的 &lt;code&gt;&amp;lt;Connector&amp;gt;&lt;/code&gt;。因为浏览器的默认端口是 80，所以如果把 &lt;code&gt;&amp;lt;Connector&amp;gt;&lt;/code&gt; 的 port 设成 80 的话，可以直接使用 url 进行访问，不用在后边再跟一个端口号。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;protocol&lt;/td&gt;
+&lt;td&gt;设定 Http 协议，默认是 HTTP/1.1。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;minThreads&lt;/td&gt;
+&lt;td&gt;服务器启动时创建的处理用户请求的线程数。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;maxThreads&lt;/td&gt;
+&lt;td&gt;可以创建的最大的处理用户请求的线程数。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;minSpareThreads&lt;/td&gt;
+&lt;td&gt;最小备用线程数。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;maxSpareThreads&lt;/td&gt;
+&lt;td&gt;最大备用线程数。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;acceptCount&lt;/td&gt;
+&lt;td&gt;当所有可以使用的处理请求的线程都被用光时,可以放到处理队列中的请求数,超过这个数的请求将不予处理，而返回 Connection refused 错误。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;redirectPort&lt;/td&gt;
+&lt;td&gt;服务器正在处理 http 请求时收到了一个 SSL 传输请求后重定向的端口号。（即当请求是 https 时，将它转发到的端口）。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;enableLookups&lt;/td&gt;
+&lt;td&gt;如果为 true，表示支持域名解析，则可以在 web 应用中通过调用 request.getRemoteHost() 进行 DNS 查询来得到远程客户端的实际主机名；若为 false 则不进行 DNS 查询，而是返回其 ip 地址。默认值为 true。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;connectionTimeout&lt;/td&gt;
+&lt;td&gt;等待超时的时间数（以毫秒为单位），如果为 -1 表示不限制客户连接的时间。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3 id=&quot;Engine-元素&quot;&gt;&lt;a href=&quot;#Engine-元素&quot; class=&quot;headerlink&quot; title=&quot;Engine 元素&quot;&gt;&lt;/a&gt;Engine 元素&lt;/h3&gt;&lt;p&gt;它处理在同一个 &lt;code&gt;&amp;lt;Service&amp;gt;&lt;/code&gt; 中所有 &lt;code&gt;&amp;lt;Connector&amp;gt;&lt;/code&gt; 元素接收到的客户请求。它匹配请求和自己的虚拟主机，并将请求发给对应的 &lt;code&gt;&amp;lt;Host&amp;gt;&lt;/code&gt; 处理，默认的主机是 localhost。&lt;/p&gt;
+&lt;p&gt;属性说明：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;属性&lt;/th&gt;
+&lt;th&gt;说明&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;name&lt;/td&gt;
+&lt;td&gt;engine的名称，对应目录 &lt;code&gt;/conf/Catalina&lt;/code&gt;。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;defaultHost&lt;/td&gt;
+&lt;td&gt;默认的处理请求的虚拟主机，至少与下面一个Host的name属性一样。对应 &lt;code&gt;/conf/Catalina/localhost&lt;/code&gt;。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Debug&lt;/td&gt;
+&lt;td&gt;日志等级。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3 id=&quot;Host-元素&quot;&gt;&lt;a href=&quot;#Host-元素&quot; class=&quot;headerlink&quot; title=&quot;Host 元素&quot;&gt;&lt;/a&gt;Host 元素&lt;/h3&gt;&lt;p&gt;一个 &lt;code&gt;&amp;lt;Engine&amp;gt;&lt;/code&gt; 元素可以包含多个 &lt;code&gt;&amp;lt;Host&amp;gt;&lt;/code&gt; 元素，每个 &lt;code&gt;&amp;lt;Host&amp;gt;&lt;/code&gt; 元素定义一个虚拟主机，它包含一个或多个web应用。&lt;/p&gt;
+&lt;p&gt;属性说明：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;属性&lt;/th&gt;
+&lt;th&gt;说明&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;name&lt;/td&gt;
+&lt;td&gt;虚拟主机名，对应目录 &lt;code&gt;/conf/Catalina/localhost&lt;/code&gt;。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;appBase&lt;/td&gt;
+&lt;td&gt;指定虚拟主机的目录，默认为 &lt;code&gt;/webapps&lt;/code&gt;。它将请求 url 与该虚拟主机的 &lt;code&gt;&amp;lt;Context&amp;gt;&lt;/code&gt; 进行匹配，并把请求转给对应的 &lt;code&gt;&amp;lt;Context&amp;gt;&lt;/code&gt; 来处理。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Debug&lt;/td&gt;
+&lt;td&gt;日志等级。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;autoDeploy&lt;/td&gt;
+&lt;td&gt;默认为 true，表示如果有新的 Web 应用放入 appBase 并且 Tomcat 在运行的情况下，自动载入应用。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;unpackWARs&lt;/td&gt;
+&lt;td&gt;如果设置为 true，表示把war文件先展开再运行。如果为 false则直接运行 war 文件。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3 id=&quot;Context-元素&quot;&gt;&lt;a href=&quot;#Context-元素&quot; class=&quot;headerlink&quot; title=&quot;Context 元素&quot;&gt;&lt;/a&gt;Context 元素&lt;/h3&gt;&lt;p&gt;代表运行在虚拟主机上的单个 web 应用。一个 Host&amp;gt; 可以包含多个 &lt;code&gt;&amp;lt;Context&amp;gt;&lt;/code&gt; 元素。每个 web 应用有唯一个相对应的 &lt;code&gt;&amp;lt;Context&amp;gt;&lt;/code&gt; 代表 web 应用自身。&lt;/p&gt;
+&lt;p&gt;属性说明：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;属性&lt;/th&gt;
+&lt;th&gt;说明&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;path&lt;/td&gt;
+&lt;td&gt;Web应用名，在使用 url 访问 &lt;code&gt;&amp;lt;Host&amp;gt;&lt;/code&gt; 下的web应用时，通过 &lt;code&gt;http://localhst/website&lt;/code&gt; 的形式。其中 localhost 为上文所说的 &lt;code&gt;&amp;lt;Host&amp;gt;&lt;/code&gt; 的 name，而 website 就是这里的 path。也就是说当一具请求到来时，&lt;code&gt;&amp;lt;Engine&amp;gt;&lt;/code&gt; 先根据 host name = localhost 来确定所要求的主机，再根据 context path = website 确定用户所请求的 web 应用。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;docBase&lt;/td&gt;
+&lt;td&gt;Web应用的具体存放路径&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Debug&lt;/td&gt;
+&lt;td&gt;日志等级。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;autoDeploy&lt;/td&gt;
+&lt;td&gt;默认为 true，表示如果有新的 web 应用放入 appBase 并且 Tomcat 在运行的情况下，自动载入应用。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;unpackWARs&lt;/td&gt;
+&lt;td&gt;如果设置为 true，表示把 war 文件先展开再运行。如果为 false 则直接运行 war 文件。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;a href=&quot;https://tomcat.apache.org/tomcat-8.0-doc/config/index.html&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Reference&lt;/a&gt;&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;code&gt;conf/server.xml&lt;/code&gt; 是 Servlet/JSP 容器 Tomcat 的主要配置文件，使用 XML 的方式描述了 WebApp 的运行方式。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="java" scheme="http://nealyg.github.io/hexo/categories/java/"/>
+    
+    
+      <category term="j2ee" scheme="http://nealyg.github.io/hexo/tags/j2ee/"/>
+    
+      <category term="tomcat" scheme="http://nealyg.github.io/hexo/tags/tomcat/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>CentOS 6.x 下修改sysctl.conf报错问题解决</title>
+    <link href="http://nealyg.github.io/hexo/2016/modify-sysctl-conf-error/"/>
+    <id>http://nealyg.github.io/hexo/2016/modify-sysctl-conf-error/</id>
+    <published>2016-01-22T08:23:18.000Z</published>
+    <updated>2016-01-22T08:23:18.000Z</updated>
+    
+    <content type="html">&lt;p&gt;sysctl.conf在涉及内核、VPN等配置时经常要修改，而在CentOS 6.x VPS主机下修改sysctl.conf经常出现错误导致更新失败。常见错误：&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;error: &lt;span class=&quot;string&quot;&gt;&quot;net.bridge.bridge-nf-call-ip6tables&quot;&lt;/span&gt; is an unknown key&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;error: &lt;span class=&quot;string&quot;&gt;&quot;net.bridge.bridge-nf-call-iptables&quot;&lt;/span&gt; is an unknown key&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;error: &lt;span class=&quot;string&quot;&gt;&quot;net.bridge.bridge-nf-call-arptables&quot;&lt;/span&gt; is an unknown key&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;解决方案&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h4 id=&quot;Xen架构的VPS&quot;&gt;&lt;a href=&quot;#Xen架构的VPS&quot; class=&quot;headerlink&quot; title=&quot;Xen架构的VPS&quot;&gt;&lt;/a&gt;Xen架构的VPS&lt;/h4&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;modprobe bridge&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;lsmod|grep bridge&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;h4 id=&quot;OpenVZ架构的VPS&quot;&gt;&lt;a href=&quot;#OpenVZ架构的VPS&quot; class=&quot;headerlink&quot; title=&quot;OpenVZ架构的VPS&quot;&gt;&lt;/a&gt;OpenVZ架构的VPS&lt;/h4&gt;&lt;p&gt;OpenVZ架构下直接执行上述命令会抛出错误：&lt;br&gt;&lt;code&gt;FATAL: Module bridge not found.&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;这是因为 OpenVZ 架构的 VPS 无法加载内核模块，最好的解决办法当然是……注释掉 sysctl.conf 报错的设置项。&lt;br&gt;这里提供另一种解决办法，让 modprobe 或者 sysctl 直接返回 true，当然，这并不是真正的修改 modprobe 或者 sysctl。&lt;/p&gt;
+&lt;p&gt;modprobe&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;rm &lt;span class=&quot;_&quot;&gt;-f&lt;/span&gt; /sbin/modprobe&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;ln &lt;span class=&quot;_&quot;&gt;-s&lt;/span&gt; /bin/&lt;span class=&quot;literal&quot;&gt;true&lt;/span&gt; /sbin/modprobe&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;sysctl&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;rm &lt;span class=&quot;_&quot;&gt;-f&lt;/span&gt; /sbin/sysctl&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;ln &lt;span class=&quot;_&quot;&gt;-s&lt;/span&gt; /bin/&lt;span class=&quot;literal&quot;&gt;true&lt;/span&gt; /sbin/sysctl&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;sysctl.conf在涉及内核、VPN等配置时经常要修改，而在CentOS 6.x VPS主机下修改sysctl.conf经常出现错误导致更新失败。常见错误：&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;error: &lt;span class=&quot;string&quot;&gt;&quot;net.bridge.bridge-nf-call-ip6tables&quot;&lt;/span&gt; is an unknown key&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;error: &lt;span class=&quot;string&quot;&gt;&quot;net.bridge.bridge-nf-call-iptables&quot;&lt;/span&gt; is an unknown key&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;error: &lt;span class=&quot;string&quot;&gt;&quot;net.bridge.bridge-nf-call-arptables&quot;&lt;/span&gt; is an unknown key&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;解决方案&lt;br&gt;
+    
+    </summary>
+    
+      <category term="Others" scheme="http://nealyg.github.io/hexo/categories/Others/"/>
+    
+    
+      <category term="linux" scheme="http://nealyg.github.io/hexo/tags/linux/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>在CentOS/Ubuntu下搭建 IPSec/IKEv2 VPN</title>
+    <link href="http://nealyg.github.io/hexo/2016/setup-vpn-server-on-centos-by-strongswan/"/>
+    <id>http://nealyg.github.io/hexo/2016/setup-vpn-server-on-centos-by-strongswan/</id>
+    <published>2016-01-20T07:47:12.000Z</published>
+    <updated>2016-01-20T07:47:12.000Z</updated>
+    
+    <content type="html">&lt;p&gt;本文介绍了如何利用StrongSwan一步步在CentOS等Linux服务器（或者其他Linux VPS主机）上搭建自己的VPN服务器，支持IPSec协议和最新的IKEv2协议，支持iOS、OS X、Windows7、Android、Linux等操作系统，iOS9、OS X10.10以上版本均已支持IKEv2 VPN协议。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;VPN （Virtual Private Network），是一种常用于连接中、大型企业或团体与团体间的私人网络的通讯方法。可在不安全的网络中传送可靠、安全的信息，或者透过服务器读取被限制的外界资源，俗称“翻墙”。搭建VPN的服务器配置要求不高，一般的VPS主机即可满足，国外有不少物美价廉的主机可供选择，比如Bandwagon、Host US等。本文以搭载了CentOS6.x的VPS主机为例，其他系统可自行修改相应的命令。&lt;/p&gt;
+&lt;h3 id=&quot;安装StrongSwan&quot;&gt;&lt;a href=&quot;#安装StrongSwan&quot; class=&quot;headerlink&quot; title=&quot;安装StrongSwan&quot;&gt;&lt;/a&gt;安装StrongSwan&lt;/h3&gt;&lt;p&gt;StrongSwan是一个完整的2.4和2.6的Linux内核下的IPsec和IKEv1 的实现，当然也完全支持新的IKEv2协议的Linux 2.6内核。可以手动到&lt;a target=&quot;_blank&quot; href=&quot;https://www.strongswan.org&quot;&gt;官网strongswan.org&lt;/a&gt;下载发行包，也可以直接编译源码安装，编译源码的好处是可以指定不同的配置来满足我们的需求。&lt;/p&gt;
+&lt;p&gt;编译并安装：&lt;/p&gt;
+&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;comment&quot;&gt;# 若不指定版本号(strongswan.tar.gz)将始终下载最新版本&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;wget https://download.strongswan.org/strongswan-5.3.5.tar.gz&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;tar xzf strongswan.tar.gz&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;built_in&quot;&gt;cd&lt;/span&gt; strongswan-*&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;./configure --enable-openssl --enable-nat-transport --disable-mysql --disable-ldap --disable-static --enable-shared --enable-md4 --enable-eap-mschapv2 --enable-eap-aka --enable-eap-aka-3gpp2 --enable-eap-gtc --enable-eap-identity --enable-eap-md5 --enable-eap-peap --enable-eap-radius --enable-eap-sim --enable-eap-sim-file --enable-eap-simaka-pseudonym --enable-eap-simaka-reauth --enable-eap-simaka-sql --enable-eap-tls --enable-eap-tnc --enable-eap-ttls&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;make &amp;amp;&amp;amp; make install&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Tips：要编译StrongSwan需要gcc等工具，这里默认系统已经安装，如果没有可使用下述命令一次安装所有依赖：&lt;br&gt;&lt;em&gt;yum -y install pam-devel openssl-devel make gcc&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&quot;证书配置&quot;&gt;&lt;a href=&quot;#证书配置&quot; class=&quot;headerlink&quot; title=&quot;证书配置&quot;&gt;&lt;/a&gt;证书配置&lt;/h3&gt;&lt;h4 id=&quot;生成CA证书的私钥，并使用私钥签名CA证书&quot;&gt;&lt;a href=&quot;#生成CA证书的私钥，并使用私钥签名CA证书&quot; class=&quot;headerlink&quot; title=&quot;生成CA证书的私钥，并使用私钥签名CA证书&quot;&gt;&lt;/a&gt;生成CA证书的私钥，并使用私钥签名CA证书&lt;/h4&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;ipsec pki --gen --outform pem &amp;gt; ca.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;ipsec pki --self --in ca.pem --dn &lt;span class=&quot;string&quot;&gt;&quot;C=com, O=vpn, CN=VPN CA&quot;&lt;/span&gt; --ca --outform pem &amp;gt; ca.cert.pem&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Tips：C 表示国家名，O 表示组织名，CN 表示通用名&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h4 id=&quot;生成服务器证书的私钥，并用CA证书签发服务器证书&quot;&gt;&lt;a href=&quot;#生成服务器证书的私钥，并用CA证书签发服务器证书&quot; class=&quot;headerlink&quot; title=&quot;生成服务器证书的私钥，并用CA证书签发服务器证书&quot;&gt;&lt;/a&gt;生成服务器证书的私钥，并用CA证书签发服务器证书&lt;/h4&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;ipsec pki --gen --outform pem &amp;gt; server.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;ipsec pki --pub --in server.pem | ipsec pki --issue --cacert ca.cert.pem \&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    --cakey ca.pem --dn &lt;span class=&quot;string&quot;&gt;&quot;C=com, O=vpn, CN=&lt;span class=&quot;variable&quot;&gt;$&amp;#123;server_name&amp;#125;&lt;/span&gt;&quot;&lt;/span&gt; \&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    --san=&lt;span class=&quot;string&quot;&gt;&quot;&lt;span class=&quot;variable&quot;&gt;$&amp;#123;server_name&amp;#125;&lt;/span&gt;&quot;&lt;/span&gt; \&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    --flag serverAuth --flag ikeIntermediate \&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    --outform pem &amp;gt; server.cert.pem&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Tips：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;C和O的值必须与CA证书的一致。CN和san建议使用服务器的 IP 地址或 URL，san可设置多个。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;iOS 客户端要求 CN 必须是你的服务器的 IP 地址或 URL。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Windows 7 除了对CN的要求之外，还要求必须显式说明这个服务器证书的用途（如用于与服务器进行认证），–flag serverAuth。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;非 iOS 的 Mac OS X 要求了”IP 安全网络密钥互换居间（IP Security IKE Intermediate）“这种增强型密钥用法（EKU），–flag ikdeIntermediate。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Android 和 iOS 都要求服务器别名（serverAltName）为服务器的 URL 或 IP 地址，–san。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/blockquote&gt;
+&lt;h4 id=&quot;生成客户端证书&quot;&gt;&lt;a href=&quot;#生成客户端证书&quot; class=&quot;headerlink&quot; title=&quot;生成客户端证书&quot;&gt;&lt;/a&gt;生成客户端证书&lt;/h4&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;ipsec pki --gen --outform pem &amp;gt; client.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;ipsec pki --pub --in client.pem | ipsec pki --issue --cacert ca.cert.pem \&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    --cakey ca.pem --dn &lt;span class=&quot;string&quot;&gt;&quot;C=com, O=vpn, CN=VPN Client&quot;&lt;/span&gt; \&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    --outform pem &amp;gt; client.cert.pem&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;h4 id=&quot;生成-pkcs12-证书&quot;&gt;&lt;a href=&quot;#生成-pkcs12-证书&quot; class=&quot;headerlink&quot; title=&quot;生成 pkcs12 证书&quot;&gt;&lt;/a&gt;生成 pkcs12 证书&lt;/h4&gt;&lt;p&gt;此处会提示输入两次密码，用于导入证书到其他系统时验证。没有这个密码别人即使拿到了证书也无法使用，可为空&lt;/p&gt;
+&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;openssl pkcs12 -export -inkey client.pem -in client.cert.pem -name &lt;span class=&quot;string&quot;&gt;&quot;client&quot;&lt;/span&gt; -certfile ca.cert.pem -caname &lt;span class=&quot;string&quot;&gt;&quot;VPN Client&quot;&lt;/span&gt;  -out client.cert.p12&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;h4 id=&quot;安装证书&quot;&gt;&lt;a href=&quot;#安装证书&quot; class=&quot;headerlink&quot; title=&quot;安装证书&quot;&gt;&lt;/a&gt;安装证书&lt;/h4&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;cp -r ca.cert.pem /usr/&lt;span class=&quot;built_in&quot;&gt;local&lt;/span&gt;/etc/ipsec.d/cacerts/&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;cp -r server.cert.pem /usr/&lt;span class=&quot;built_in&quot;&gt;local&lt;/span&gt;/etc/ipsec.d/certs/&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;cp -r server.pem /usr/&lt;span class=&quot;built_in&quot;&gt;local&lt;/span&gt;/etc/ipsec.d/private/&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;cp -r client.cert.pem /usr/&lt;span class=&quot;built_in&quot;&gt;local&lt;/span&gt;/etc/ipsec.d/certs/&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;cp -r client.pem  /usr/&lt;span class=&quot;built_in&quot;&gt;local&lt;/span&gt;/etc/ipsec.d/private/&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;h4 id=&quot;保存证书&quot;&gt;&lt;a href=&quot;#保存证书&quot; class=&quot;headerlink&quot; title=&quot;保存证书&quot;&gt;&lt;/a&gt;保存证书&lt;/h4&gt;&lt;p&gt;将上述生成的CA证书（ca.cert.pem）、客户端证书（client.cert.pem）、pkcs12证书（client.cert.p12）使用FTP或者scp拷贝出来，以备供客户端使用&lt;/p&gt;
+&lt;h3 id=&quot;StrongSwan配置&quot;&gt;&lt;a href=&quot;#StrongSwan配置&quot; class=&quot;headerlink&quot; title=&quot;StrongSwan配置&quot;&gt;&lt;/a&gt;StrongSwan配置&lt;/h3&gt;&lt;h4 id=&quot;ipsec配置文件&quot;&gt;&lt;a href=&quot;#ipsec配置文件&quot; class=&quot;headerlink&quot; title=&quot;ipsec配置文件&quot;&gt;&lt;/a&gt;ipsec配置文件&lt;/h4&gt;&lt;p&gt;&lt;code&gt;/usr/local/etc/ipsec.conf&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight nix&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;config setup&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;uniqueids=never&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;conn %default&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;keyexchange=ike&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;left=%any&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;leftsubnet=0.0.0.0/0&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;right=%any&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;conn IKE-BASE&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;leftcert=server.cert.pem&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;rightsourceip=10.0.0.0/24&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;comment&quot;&gt;# ios etc.&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;conn by_cert&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;also=IKE-BASE&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;keyexchange=ikev1&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;fragmentation=yes&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;leftauth=pubkey&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;leftsubnet=0.0.0.0/0&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;rightauth=pubkey&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;rightauth2=xauth&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;rightcert=client.cert.pem&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;auto=add&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;comment&quot;&gt;# ios etc.&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;conn by_psk&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;also=IKE-BASE&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;keyexchange=ikev1&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;leftauth=psk&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;rightauth=psk&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;rightauth2=xauth&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;auto=add&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;comment&quot;&gt;# osx linux android etc.&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;conn by_key&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;also=IKE-BASE&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;keyexchange=ikev2&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;leftauth=pubkey&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;rightauth=pubkey&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;rightcert=client.cert.pem&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;auto=add&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;comment&quot;&gt;# ikev2 (ios osx win7 etc.)&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;conn IKEv2-EAP&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;also=IKE-BASE&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;keyexchange=ikev2&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;esp=aes256-sha256,3des-sha1,aes256-sha1!&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;rekey=no&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;leftid=$&amp;#123;my_cert_cn&amp;#125;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;leftauth=pubkey&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;leftsendcert=always&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;rightfirewall=yes&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;rightsendcert=never&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;rightauth=eap-mschapv2&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;eap_identity=%any&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;dpdaction=clear&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;fragmentation=yes&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attr&quot;&gt;auto=add&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;h4 id=&quot;strongswan配置文件&quot;&gt;&lt;a href=&quot;#strongswan配置文件&quot; class=&quot;headerlink&quot; title=&quot;strongswan配置文件&quot;&gt;&lt;/a&gt;strongswan配置文件&lt;/h4&gt;&lt;p&gt;&lt;code&gt;/usr/local/etc/strongswan.conf&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight nginx&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;section&quot;&gt;charon&lt;/span&gt; &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;attribute&quot;&gt;load_modular&lt;/span&gt; = &lt;span class=&quot;literal&quot;&gt;yes&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    duplicheck.enable = &lt;span class=&quot;literal&quot;&gt;no&lt;/span&gt; &lt;span class=&quot;comment&quot;&gt;#闭冗余检查以同时连接多个设备&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    compress = &lt;span class=&quot;literal&quot;&gt;yes&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    plugins &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;attribute&quot;&gt;include&lt;/span&gt; strongswan.d/charon/&lt;span class=&quot;regexp&quot;&gt;*.conf&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    dns1 = &lt;span class=&quot;number&quot;&gt;8.8.8.8&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    dns2 = &lt;span class=&quot;number&quot;&gt;8.8.4.4&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;comment&quot;&gt;# for windows&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    nbns1 = &lt;span class=&quot;number&quot;&gt;8.8.8.8&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    nbns2 = &lt;span class=&quot;number&quot;&gt;8.8.4.4&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;include strongswan.d/&lt;span class=&quot;regexp&quot;&gt;*.conf&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;h4 id=&quot;密码认证文件&quot;&gt;&lt;a href=&quot;#密码认证文件&quot; class=&quot;headerlink&quot; title=&quot;密码认证文件&quot;&gt;&lt;/a&gt;密码认证文件&lt;/h4&gt;&lt;p&gt;&lt;code&gt;vi /usr/local/etc/ipsec.secrets&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;: RSA server.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;: PSK &lt;span class=&quot;string&quot;&gt;&quot;myPSKpw&quot;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;: XAUTH &lt;span class=&quot;string&quot;&gt;&quot;myXAUTHpw&quot;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;myUserName %any : EAP &lt;span class=&quot;string&quot;&gt;&quot;myUserPassWord&quot;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Windows Phone 8.1 设备因其使用EAP连接时会自动在用户名之前加上设备名称，因此若要用于WP8.1设备应追加一条EAP配置：&lt;br&gt;&lt;code&gt;设备名称\用户名 : EAP &amp;quot;密码&amp;quot;&lt;/code&gt;&lt;br&gt;其中，设备名称可在“设置-关于-手机信息”中查看。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h4 id=&quot;启动StrongSwan&quot;&gt;&lt;a href=&quot;#启动StrongSwan&quot; class=&quot;headerlink&quot; title=&quot;启动StrongSwan&quot;&gt;&lt;/a&gt;启动StrongSwan&lt;/h4&gt;&lt;p&gt;&lt;code&gt;ipsec start&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id=&quot;iptables配置&quot;&gt;&lt;a href=&quot;#iptables配置&quot; class=&quot;headerlink&quot; title=&quot;iptables配置&quot;&gt;&lt;/a&gt;iptables配置&lt;/h3&gt;&lt;p&gt;要通过VPN访问外网需要开启Linux内核的IP转发功能，编辑&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/etc/sysctl.conf&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight stylus&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;net&lt;span class=&quot;selector-class&quot;&gt;.ipv4&lt;/span&gt;&lt;span class=&quot;selector-class&quot;&gt;.ip_forward&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;net&lt;span class=&quot;selector-class&quot;&gt;.ipv6&lt;/span&gt;&lt;span class=&quot;selector-class&quot;&gt;.conf&lt;/span&gt;&lt;span class=&quot;selector-class&quot;&gt;.all&lt;/span&gt;&lt;span class=&quot;selector-class&quot;&gt;.forwarding&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;运行&lt;code&gt;sysctl -p&lt;/code&gt;使之生效。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;应确保sysctl修改成功，没有报错，如果报错请参考：&lt;br&gt;&lt;a target=&quot;_blank&quot; href=&quot;http://www.mynook.xyz/2016/modify-sysctl-conf-error/&quot;&gt;CentOS 6.x 下修改sysctl.conf报错问题解决&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;同时应该设置iptables开启需要开放的端口和nat转发，这里配置几个各个操作系统常用的VPN默认端口：&lt;/p&gt;
+&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;iptables -A FORWARD &lt;span class=&quot;_&quot;&gt;-s&lt;/span&gt; 10.0.0.0/24  -j ACCEPT&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;iptables -A INPUT -i eth0 -p esp -j ACCEPT&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;iptables -A INPUT -i eth0 -p udp --dport 500 -j ACCEPT&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;iptables -A INPUT -i eth0 -p tcp --dport 500 -j ACCEPT&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;iptables -A INPUT -i eth0 -p udp --dport 4500 -j ACCEPT&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;iptables -A INPUT -i eth0 -p udp --dport 1701 -j ACCEPT&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;iptables -A INPUT -i eth0 -p tcp --dport 1723 -j ACCEPT&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;iptables -A FORWARD -j REJECT&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;iptables -t nat -A POSTROUTING &lt;span class=&quot;_&quot;&gt;-s&lt;/span&gt; 10.0.0.0/24 -o eth0 -j MASQUERADE&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;其中，10.0.0.0是分配给客户端的IP地址段，应与ipsec所配置的地址段相同。eth0是网卡名称，注意填写实际网卡名称。&lt;/p&gt;
+&lt;p&gt;保存并退出，重启iptables使之生效：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;service iptables restart&lt;/code&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Tips：CentOS 7.x 使用 firewallD 代替 iptables 作为默认防火墙，可自行禁用并安装 iptables。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&quot;客户端使用&quot;&gt;&lt;a href=&quot;#客户端使用&quot; class=&quot;headerlink&quot; title=&quot;客户端使用&quot;&gt;&lt;/a&gt;客户端使用&lt;/h3&gt;&lt;h4 id=&quot;Mac-OS-X／iOS&quot;&gt;&lt;a href=&quot;#Mac-OS-X／iOS&quot; class=&quot;headerlink&quot; title=&quot;Mac OS X／iOS&quot;&gt;&lt;/a&gt;Mac OS X／iOS&lt;/h4&gt;&lt;p&gt;新建VPN：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;IPSec ＋ EAP（无需导入任何证书）&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;服务器：服务器IP或者URL&lt;/li&gt;
+&lt;li&gt;用户名密码：ipsec.secrets文件中EAP前后的那两个&lt;/li&gt;
+&lt;li&gt;密钥：PSK密码&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;IPSec ＋ 证书（需导入CA证书和pkcs证书）&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;服务器：服务器IP或者URL&lt;/li&gt;
+&lt;li&gt;用户名密码：ipsec.secrets文件中EAP前后的那两个（也可用XAUTH的密码）&lt;/li&gt;
+&lt;li&gt;打开使用证书并选择导入的证书&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;IKEv2（需导入CA证书）&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;服务器：服务器IP或者URL&lt;/li&gt;
+&lt;li&gt;远程ID：服务器IP或者URL&lt;/li&gt;
+&lt;li&gt;用户名密码：ipsec.secrets文件中EAP前后的那两个&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h4 id=&quot;Windows-7及更高版本&quot;&gt;&lt;a href=&quot;#Windows-7及更高版本&quot; class=&quot;headerlink&quot; title=&quot;Windows 7及更高版本&quot;&gt;&lt;/a&gt;Windows 7及更高版本&lt;/h4&gt;&lt;p&gt;导入证书：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;开始菜单搜索 “cmd”，打开后输入 mmc（Microsoft 管理控制台）；&lt;/li&gt;
+&lt;li&gt;打开“文件” - “添加/删除管理单元”，添加“证书”单元；&lt;/li&gt;
+&lt;li&gt;证书单元的弹出窗口中一定要选 “计算机账户”，之后选 “本地计算机”，确定；&lt;/li&gt;
+&lt;li&gt;在左边的 “控制台根节点” 下选择 “证书” - “个人”，然后选右边的 “更多操作” - “所有任务” - “导入” 打开证书导入窗口；&lt;/li&gt;
+&lt;li&gt;选择刚才生成的pkcs12证书 client.cert.p12，下一步输入密码，下一步 “证书存储” 选 “个人”；&lt;/li&gt;
+&lt;li&gt;导入成功后，把导入的 CA 证书剪切到 “受信任的根证书颁发机构” 的证书文件夹里面。&lt;/li&gt;
+&lt;li&gt;打开剩下的那个私人证书，看一下有没有显示 “您有一个与该证书对应的私钥”，以及 “证书路径” 下面是不是显示 “该证书没有问题”；&lt;/li&gt;
+&lt;li&gt;然后关闭 mmc，提示 “将控制台设置存入控制台1吗”，选 “否” 即可。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;创建VPN即可。&lt;/p&gt;
+&lt;h4 id=&quot;Android&quot;&gt;&lt;a href=&quot;#Android&quot; class=&quot;headerlink&quot; title=&quot;Android&quot;&gt;&lt;/a&gt;Android&lt;/h4&gt;&lt;p&gt;IPSec XAUTH PSK&lt;/p&gt;
+&lt;p&gt;IPSec预共享密钥即PSK密码。&lt;/p&gt;
+&lt;h3 id=&quot;一键安装脚本&quot;&gt;&lt;a href=&quot;#一键安装脚本&quot; class=&quot;headerlink&quot; title=&quot;一键安装脚本&quot;&gt;&lt;/a&gt;一键安装脚本&lt;/h3&gt;&lt;p&gt;制作了一个一键安装脚本，不喜欢折腾的可使用该脚本，按照说明运行即可。适用于 CentOS 6.x 及 Ubuntu。&lt;br&gt;&lt;a target=&quot;_blank&quot; href=&quot;https://github.com/nealyg/one-key-vpn-server&quot;&gt;一键安装脚本&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;本文部分数据来源于网络，转载请注明出处。&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;本文介绍了如何利用StrongSwan一步步在CentOS等Linux服务器（或者其他Linux VPS主机）上搭建自己的VPN服务器，支持IPSec协议和最新的IKEv2协议，支持iOS、OS X、Windows7、Android、Linux等操作系统，iOS9、OS X10.10以上版本均已支持IKEv2 VPN协议。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="Others" scheme="http://nealyg.github.io/hexo/categories/Others/"/>
+    
+    
+      <category term="linux" scheme="http://nealyg.github.io/hexo/tags/linux/"/>
+    
+      <category term="strongswan" scheme="http://nealyg.github.io/hexo/tags/strongswan/"/>
+    
+      <category term="vpn" scheme="http://nealyg.github.io/hexo/tags/vpn/"/>
+    
+  </entry>
+  
+</feed>
