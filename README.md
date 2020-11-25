@@ -1,2 +1,2 @@
 # hexo
-Hexo
+Hexo 博客
